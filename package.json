@@ -1,0 +1,20 @@
+{
+  "name": "sitetrace-api-suite",
+  "version": "1.0.0",
+  "description": "SiteTrace Website Intelligence API Suite - 10 endpoints, single deployment",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "check": "node --check server.js && node --check seo-snapshot/index.js && node --check robots-analyzer/index.js && node --check sitemap-analyzer/index.js && node --check meta-preview/index.js && node --check schema-detector/index.js && node --check contact-extractor/index.js && node --check tech-stack/index.js && node --check security-headers/index.js && node --check business-lead-score/index.js && node --check report-generator/index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

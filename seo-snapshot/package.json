@@ -1,0 +1,19 @@
+{
+  "name": "sitetrace-api-seo-snapshot",
+  "version": "1.0.0",
+  "description": "Returns a full on-page SEO snapshot of any public URL",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "axios": "^1.16.0",
+    "cheerio": "^1.2.0",
+    "cors": "^2.8.6",
+    "express": "^4.22.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
