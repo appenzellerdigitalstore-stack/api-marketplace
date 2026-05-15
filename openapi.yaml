@@ -1,0 +1,869 @@
+openapi: 3.0.3
+info:
+  title: SiteTrace Website Intelligence API Suite
+  version: 1.0.0
+  description: >
+    Ten website intelligence endpoints for SEO, crawlability, social previews,
+    structured data, contact extraction, tech stack detection, security headers,
+    lead scoring, and full website reports.
+  contact:
+    name: SiteTrace
+servers:
+  - url: https://api-marketplace-b73f.onrender.com
+    description: Production Render service
+tags:
+  - name: SEO
+  - name: Crawlability
+  - name: Social
+  - name: Structured Data
+  - name: Lead Generation
+  - name: Web Intelligence
+  - name: Security
+  - name: Reports
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Returns service status and the available API endpoints.
+      operationId: getHealth
+      tags:
+        - Reports
+      responses:
+        "200":
+          description: Service is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: ok
+                service: sitetrace-api-suite
+                endpoints:
+                  - POST /api/seo-snapshot
+                  - POST /api/security-headers
+  /api/seo-snapshot:
+    post:
+      summary: SEO Snapshot
+      description: Analyze a public URL and return on-page SEO metadata, headings, image alt coverage, links, social tag signals, and plan-dependent SEO analysis.
+      operationId: seoSnapshot
+      tags:
+        - SEO
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: SEO snapshot result.
+          headers:
+            X-RateLimit-Plan:
+              $ref: "#/components/headers/XRateLimitPlan"
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseAnalysisResponse"
+                  - type: object
+                    properties:
+                      page:
+                        type: object
+                        additionalProperties: true
+                      images:
+                        type: object
+                        additionalProperties: true
+                      links:
+                        type: object
+                        additionalProperties: true
+                      social:
+                        type: object
+                        additionalProperties: true
+                      seo_score:
+                        type: integer
+                      issues:
+                        type: array
+                        items:
+                          type: object
+                      recommendations:
+                        type: array
+                        items:
+                          type: string
+              example:
+                success: true
+                url: https://example.com/
+                status_code: 200
+                page:
+                  title: Example Domain
+                  h1_count: 1
+                links:
+                  total: 1
+                  internal: 0
+                  external: 1
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "502":
+          $ref: "#/components/responses/UpstreamFailure"
+  /api/robots-analyzer:
+    post:
+      summary: Robots Analyzer
+      description: Fetch and parse a site's robots.txt file, including user-agent groups, allow/disallow rules, crawl-delay values, sitemap declarations, and insights.
+      operationId: robotsAnalyzer
+      tags:
+        - Crawlability
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: Robots.txt analysis result.
+          headers:
+            X-RateLimit-Plan:
+              $ref: "#/components/headers/XRateLimitPlan"
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseDomainResponse"
+                  - type: object
+                    properties:
+                      robots_url:
+                        type: string
+                      found:
+                        type: boolean
+                      groups:
+                        type: array
+                        items:
+                          type: object
+                      sitemaps:
+                        type: array
+                        items:
+                          type: string
+                      insights:
+                        type: array
+                        items:
+                          type: object
+              example:
+                success: true
+                domain: example.com
+                robots_url: https://example.com/robots.txt
+                found: false
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "502":
+          $ref: "#/components/responses/UpstreamFailure"
+  /api/sitemap-analyzer:
+    post:
+      summary: Sitemap Analyzer
+      description: Discover, fetch, and analyze XML sitemaps from common sitemap paths and robots.txt hints.
+      operationId: sitemapAnalyzer
+      tags:
+        - Crawlability
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: Sitemap analysis result.
+          headers:
+            X-RateLimit-Plan:
+              $ref: "#/components/headers/XRateLimitPlan"
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseDomainResponse"
+                  - type: object
+                    properties:
+                      found:
+                        type: boolean
+                      sitemap_url:
+                        type: string
+                      total_urls:
+                        type: integer
+                      urls:
+                        type: array
+                        items:
+                          type: object
+                      insights:
+                        type: array
+                        items:
+                          type: object
+              example:
+                success: true
+                domain: example.com
+                found: false
+                message: No sitemap found. Tried /sitemap.xml, /sitemap_index.xml, and robots.txt hints.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "502":
+          $ref: "#/components/responses/UpstreamFailure"
+  /api/meta-preview:
+    post:
+      summary: Meta Preview
+      description: Extract Open Graph, Twitter Card, LinkedIn, and basic page metadata for social previews.
+      operationId: metaPreview
+      tags:
+        - Social
+        - SEO
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: Social preview metadata result.
+          headers:
+            X-RateLimit-Plan:
+              $ref: "#/components/headers/XRateLimitPlan"
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseAnalysisResponse"
+                  - type: object
+                    properties:
+                      basic:
+                        type: object
+                        additionalProperties: true
+                      open_graph:
+                        type: object
+                        additionalProperties: true
+                      twitter_card:
+                        type: object
+                        additionalProperties: true
+                      previews:
+                        type: object
+                        additionalProperties: true
+                      completeness_score:
+                        type: integer
+              example:
+                success: true
+                url: https://example.com/
+                status_code: 200
+                basic:
+                  title: Example Domain
+                  description: null
+                has_og_image: false
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "502":
+          $ref: "#/components/responses/UpstreamFailure"
+  /api/schema-detector:
+    post:
+      summary: Schema Detector
+      description: Detect and parse structured data formats including JSON-LD, Microdata, and RDFa.
+      operationId: schemaDetector
+      tags:
+        - Structured Data
+        - SEO
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: Structured data detection result.
+          headers:
+            X-RateLimit-Plan:
+              $ref: "#/components/headers/XRateLimitPlan"
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseAnalysisResponse"
+                  - type: object
+                    properties:
+                      schema_count:
+                        type: integer
+                      detected_types:
+                        type: array
+                        items:
+                          type: string
+                      rich_result_eligible:
+                        type: boolean
+                      schemas:
+                        type: array
+                        items:
+                          type: object
+                      insights:
+                        type: array
+                        items:
+                          type: object
+              example:
+                success: true
+                url: https://example.com/
+                status_code: 200
+                schema_count: 0
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "502":
+          $ref: "#/components/responses/UpstreamFailure"
+  /api/contact-extractor:
+    post:
+      summary: Contact Extractor
+      description: Extract public emails, phone numbers, social profile links, and address-like contact signals from a website.
+      operationId: contactExtractor
+      tags:
+        - Lead Generation
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: Contact extraction result.
+          headers:
+            X-RateLimit-Plan:
+              $ref: "#/components/headers/XRateLimitPlan"
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseAnalysisResponse"
+                  - type: object
+                    properties:
+                      emails:
+                        type: array
+                        items:
+                          type: string
+                      phones:
+                        type: array
+                        items:
+                          type: string
+                      social_profiles:
+                        type: object
+                        additionalProperties: true
+                      counts:
+                        type: object
+                        additionalProperties: true
+                      insights:
+                        type: array
+                        items:
+                          type: object
+              example:
+                success: true
+                url: https://example.com/
+                status_code: 200
+                emails: []
+                phones: []
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "502":
+          $ref: "#/components/responses/UpstreamFailure"
+  /api/tech-stack:
+    post:
+      summary: Tech Stack
+      description: Detect website technologies from HTML, scripts, meta tags, cookies, and response headers.
+      operationId: techStack
+      tags:
+        - Web Intelligence
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: Technology detection result.
+          headers:
+            X-RateLimit-Plan:
+              $ref: "#/components/headers/XRateLimitPlan"
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseAnalysisResponse"
+                  - type: object
+                    properties:
+                      total_detected:
+                        type: integer
+                      technology_names:
+                        type: array
+                        items:
+                          type: string
+                      technologies:
+                        type: array
+                        items:
+                          type: object
+                      by_category:
+                        type: object
+                        additionalProperties: true
+                      server_headers:
+                        type: object
+                        additionalProperties: true
+              example:
+                success: true
+                url: https://example.com/
+                status_code: 200
+                total_detected: 1
+                technology_names:
+                  - HTML
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "502":
+          $ref: "#/components/responses/UpstreamFailure"
+  /api/security-headers:
+    post:
+      summary: Security Headers
+      description: Audit HTTP security headers and SSL metadata, returning a security score, grade, missing headers, and recommendations by plan.
+      operationId: securityHeaders
+      tags:
+        - Security
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: Security header audit result.
+          headers:
+            X-RateLimit-Plan:
+              $ref: "#/components/headers/XRateLimitPlan"
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseAnalysisResponse"
+                  - type: object
+                    properties:
+                      security_score:
+                        type: integer
+                      grade:
+                        type: string
+                      headers_present:
+                        type: integer
+                      headers_missing:
+                        type: integer
+                      ssl:
+                        type: object
+                        nullable: true
+                      headers:
+                        type: array
+                        items:
+                          type: object
+              example:
+                success: true
+                url: https://example.com/
+                status_code: 200
+                grade: C
+                headers_present: 2
+                headers_missing: 7
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "502":
+          $ref: "#/components/responses/UpstreamFailure"
+  /api/business-lead-score:
+    post:
+      summary: Business Lead Score
+      description: Score a website as a B2B lead using contact, trust, technical, SEO, and buying-readiness signals.
+      operationId: businessLeadScore
+      tags:
+        - Lead Generation
+        - Web Intelligence
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: Business lead scoring result.
+          headers:
+            X-RateLimit-Plan:
+              $ref: "#/components/headers/XRateLimitPlan"
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseDomainResponse"
+                  - type: object
+                    properties:
+                      lead_score:
+                        type: integer
+                      tier:
+                        type: string
+                      buying_readiness:
+                        type: string
+                      company_info:
+                        type: object
+                        additionalProperties: true
+                      signals:
+                        type: array
+                        items:
+                          type: object
+              example:
+                success: true
+                url: https://example.com/
+                domain: example.com
+                status_code: 200
+                lead_score: 42
+                tier: Cold Lead
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "502":
+          $ref: "#/components/responses/UpstreamFailure"
+  /api/report-generator:
+    post:
+      summary: Report Generator
+      description: Generate a combined website audit report covering SEO, social metadata, performance, security, content, and crawlability signals.
+      operationId: reportGenerator
+      tags:
+        - Reports
+        - SEO
+        - Security
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: Full report result.
+          headers:
+            X-RateLimit-Plan:
+              $ref: "#/components/headers/XRateLimitPlan"
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseDomainResponse"
+                  - type: object
+                    properties:
+                      overall_score:
+                        type: integer
+                      overall_grade:
+                        type: string
+                      scores:
+                        type: object
+                        additionalProperties: true
+                      seo:
+                        type: object
+                        additionalProperties: true
+                      social:
+                        type: object
+                        additionalProperties: true
+                      performance:
+                        type: object
+                        additionalProperties: true
+                      security:
+                        type: object
+                        additionalProperties: true
+                      crawlability:
+                        type: object
+                        additionalProperties: true
+              example:
+                success: true
+                url: https://example.com/
+                domain: example.com
+                status_code: 200
+                overall_score: 80
+                overall_grade: B
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "502":
+          $ref: "#/components/responses/UpstreamFailure"
+components:
+  parameters:
+    RapidApiSubscription:
+      name: X-RapidAPI-Subscription
+      in: header
+      required: false
+      description: RapidAPI plan header. BASIC maps to free, PRO maps to pro, ULTRA maps to ultra, and MEGA maps to mega.
+      schema:
+        type: string
+        enum:
+          - BASIC
+          - PRO
+          - ULTRA
+          - MEGA
+      example: PRO
+    SiteTracePlan:
+      name: X-Plan
+      in: header
+      required: false
+      description: Direct/internal plan override. If omitted, the API defaults to free unless X-RapidAPI-Subscription is present.
+      schema:
+        type: string
+        enum:
+          - free
+          - pro
+          - ultra
+          - mega
+      example: pro
+  headers:
+    XRateLimitPlan:
+      description: Effective plan used by the API.
+      schema:
+        type: string
+        enum:
+          - free
+          - pro
+          - ultra
+          - mega
+    XRateLimitLimit:
+      description: Maximum requests allowed in the current one-minute window.
+      schema:
+        type: integer
+    XRateLimitRemaining:
+      description: Remaining requests in the current one-minute window.
+      schema:
+        type: integer
+    XRateLimitReset:
+      description: Unix timestamp when the current rate-limit window resets.
+      schema:
+        type: integer
+  requestBodies:
+    UrlRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UrlRequest"
+          example:
+            url: https://example.com
+  responses:
+    BadRequest:
+      description: Invalid request, missing URL, unsupported protocol, or private/local URL.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error: Private/local network URLs are not supported
+    RateLimited:
+      description: The request exceeded the active plan's per-minute rate limit.
+      headers:
+        Retry-After:
+          description: Seconds until the client should retry.
+          schema:
+            type: integer
+        X-RateLimit-Plan:
+          $ref: "#/components/headers/XRateLimitPlan"
+        X-RateLimit-Limit:
+          $ref: "#/components/headers/XRateLimitLimit"
+        X-RateLimit-Remaining:
+          $ref: "#/components/headers/XRateLimitRemaining"
+        X-RateLimit-Reset:
+          $ref: "#/components/headers/XRateLimitReset"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RateLimitResponse"
+          example:
+            success: false
+            error: Rate limit exceeded
+            plan: free
+            limit: 5
+            window_seconds: 60
+            retry_after_seconds: 60
+    UpstreamFailure:
+      description: The target website could not be fetched or analyzed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error: Failed to fetch or analyze URL
+  schemas:
+    UrlRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Public HTTP or HTTPS website URL to analyze.
+          example: https://example.com
+        max_urls:
+          type: integer
+          description: Optional sitemap result limit for /api/sitemap-analyzer.
+          minimum: 1
+          maximum: 2000
+          example: 500
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+        - endpoints
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: sitetrace-api-suite
+        endpoints:
+          type: array
+          items:
+            type: string
+    BaseAnalysisResponse:
+      type: object
+      required:
+        - success
+        - url
+      properties:
+        success:
+          type: boolean
+        url:
+          type: string
+          format: uri
+        status_code:
+          type: integer
+        analyzed_at:
+          type: string
+          format: date-time
+        final_url:
+          type: string
+          format: uri
+    BaseDomainResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+        url:
+          type: string
+          format: uri
+        domain:
+          type: string
+        status_code:
+          type: integer
+        analyzed_at:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        detail:
+          type: string
+    RateLimitResponse:
+      type: object
+      required:
+        - success
+        - error
+        - plan
+        - limit
+        - window_seconds
+        - retry_after_seconds
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Rate limit exceeded
+        plan:
+          type: string
+          enum:
+            - free
+            - pro
+            - ultra
+            - mega
+        limit:
+          type: integer
+        window_seconds:
+          type: integer
+          example: 60
+        retry_after_seconds:
+          type: integer
