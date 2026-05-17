@@ -22,9 +22,9 @@ Consolidated Node.js API service with 10 website intelligence endpoints for Rapi
 
 Plan is resolved in this order:
 
-1. `X-RapidAPI-Subscription: BASIC | PRO | ULTRA | MEGA`
-2. `X-Plan: free | pro | ultra | mega`
-3. `X-SiteTrace-Plan: free | pro | ultra | mega`
+1. Trusted RapidAPI requests with `X-RapidAPI-Proxy-Secret` and `X-RapidAPI-Subscription: BASIC | PRO | ULTRA | MEGA`
+2. Trusted internal requests with `X-SiteTrace-Internal-Secret` or `Authorization: Bearer ...`
+3. Local development only, when no secrets are configured
 4. Defaults to `free`
 
 | RapidAPI plan | Internal plan | Rate limit |
@@ -43,6 +43,17 @@ Rate limit headers are returned on API responses:
 - `Retry-After` on `429`
 
 Monthly quotas should still be configured in RapidAPI's pricing tab.
+
+## Required Production Secrets
+
+Set these in Render before publishing endpoints publicly:
+
+```bash
+RAPIDAPI_PROXY_SECRET=the-secret-configured-in-rapidapi
+SITETRACE_INTERNAL_SECRET=long-random-secret-for-direct-internal-tests
+```
+
+When `NODE_ENV=production`, API routes reject direct requests unless one of those secrets is present. This prevents callers from bypassing RapidAPI and spoofing `X-Plan: mega`.
 
 ## Local Development
 
@@ -72,6 +83,9 @@ Recommended Render settings:
 - Health check path: `/health`
 - Runtime: Node.js
 - Node version: `>=18`
+- Environment:
+  - `RAPIDAPI_PROXY_SECRET`
+  - `SITETRACE_INTERNAL_SECRET`
 
 ## RapidAPI Setup
 
@@ -80,6 +94,7 @@ For each RapidAPI listing:
 - Base URL: your Render service URL
 - Endpoint path: one of the `/api/...` paths above
 - Authentication: RapidAPI default `X-RapidAPI-Key`
+- Configure RapidAPI proxy secret and set the same value in Render as `RAPIDAPI_PROXY_SECRET`
 - Plans:
   - BASIC: free, 50 requests/month, 5 requests/minute
   - PRO: `$9.99/mo`, 5,000 requests/month, 30 requests/minute

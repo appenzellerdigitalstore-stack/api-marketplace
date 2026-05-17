@@ -13,6 +13,8 @@ Confirm:
 - `GET /health` returns `200`.
 - All 10 `POST /api/...` endpoints return JSON.
 - BASIC requests are limited after 5 requests per minute.
+- Direct production API calls without RapidAPI/internal secret return `401`.
+- `X-Plan` only works for trusted internal/development requests.
 
 ## GitHub
 
@@ -33,12 +35,16 @@ Use the included `render.yaml`, or create a Web Service manually:
 - Build command: `npm ci`
 - Start command: `npm start`
 - Health check path: `/health`
+- `RAPIDAPI_PROXY_SECRET`: same proxy secret configured in RapidAPI
+- `SITETRACE_INTERNAL_SECRET`: long random secret for direct internal smoke tests
 
 Render sets `PORT` automatically. The app reads `process.env.PORT`.
 
 ## RapidAPI
 
 Create listings pointing to the Render base URL and each endpoint path.
+
+Configure RapidAPI to send its proxy secret and store the same value in Render as `RAPIDAPI_PROXY_SECRET`.
 
 Rate limits:
 

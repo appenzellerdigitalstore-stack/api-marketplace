@@ -4,8 +4,7 @@
  * Response depth is controlled by plan: free | pro | ultra | mega
  */
 const express = require('express');
-const axios = require('axios');
-const { normalizeUrl, getSslInfo, errorResponse, USER_AGENT } = require('../shared/utils');
+const { normalizeUrl, fetchPublicUrl, getSslInfo, errorResponse, USER_AGENT } = require('../shared/utils');
 const { getPlan, filterByPlan } = require('../shared/planFilter');
 
 const app = express();
@@ -105,15 +104,9 @@ app.post('/api/security-headers', async (req, res) => {
   try {
     const [response, ssl] = await Promise.all([
       // Try HEAD first (faster), fall back to GET if HEAD is blocked
-      axios.head(urlObj.href, {
-        timeout: 10000, proxy: false, maxRedirects: 5, validateStatus: () => true,
-        headers: { 'User-Agent': USER_AGENT }
-      }).catch(() =>
-        axios.get(urlObj.href, {
-          timeout: 10000, proxy: false, maxRedirects: 5, validateStatus: () => true,
-          headers: { 'User-Agent': USER_AGENT }
-        })
-      ),
+      fetchPublicUrl(urlObj, { method: 'HEAD', timeout: 10000, headers: { 'User-Agent': USER_AGENT } })
+        .then(({ response }) => response)
+        .catch(() => fetchPublicUrl(urlObj, { timeout: 10000, headers: { 'User-Agent': USER_AGENT } }).then(({ response }) => response)),
       getSslInfo(urlObj)
     ]);
 

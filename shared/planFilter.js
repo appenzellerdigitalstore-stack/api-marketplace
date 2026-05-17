@@ -5,8 +5,8 @@
  * Plan resolution order:
  *   1. X-RapidAPI-Subscription header (injected by RapidAPI gateway)
  *      Maps: BASIC->free, PRO->pro, ULTRA->ultra, MEGA->mega
- *   2. X-Plan header (for self-hosted / internal use)
- *   3. X-SiteTrace-Plan header (for direct customers)
+ *   2. X-Plan header only for trusted internal/development clients
+ *   3. X-SiteTrace-Plan header only for trusted internal/development clients
  *   4. Defaults to 'free'
  */
 
@@ -23,10 +23,17 @@ const RAPIDAPI_PLAN_MAP = {
 
 function getPlan(req) {
   const rapidapiSub = req.headers['x-rapidapi-subscription'];
-  if (rapidapiSub) {
+  const rapidApiSecretConfigured = Boolean(process.env.RAPIDAPI_PROXY_SECRET);
+  const rapidApiTrusted = req.marketplaceAuth === 'rapidapi' || !rapidApiSecretConfigured;
+
+  if (rapidApiTrusted && rapidapiSub) {
     const mapped = RAPIDAPI_PLAN_MAP[rapidapiSub.toLowerCase().trim()];
     if (mapped) return mapped;
   }
+
+  const internalTrusted = req.marketplaceAuth === 'internal' || req.marketplaceAuth === 'development';
+  if (!internalTrusted) return 'free';
+
   const raw = (
     req.headers['x-plan'] ||
     req.headers['x-sitetrace-plan'] ||
@@ -175,7 +182,7 @@ function filterReportGenerator(full, plan) {
   const ultra = { success: full.success, url: full.url, domain: full.domain, status_code: full.status_code,
     generated_at: full.generated_at, overall_score: full.overall_score, overall_grade: full.overall_grade,
     scores: full.scores, seo: full.seo, social: full.social, performance: full.performance,
-    security: full.security, crawlability: full.crawlability };
+    security: full.security, crawlability: full.crawlability, insights: full.insights };
   if (plan === 'ultra') return ultra;
   return { ...ultra, report_ready: true, export_formats: ['json','html','pdf'], priority_processing: true };
 }

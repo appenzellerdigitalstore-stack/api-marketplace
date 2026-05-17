@@ -134,7 +134,10 @@ Access all 10 endpoints under a single subscription.
 
 ## How Plan Detection Works
 
-Plans are read from the request header. Set one of these:
+Plans are read from trusted request headers:
+
+- RapidAPI requests use `X-RapidAPI-Subscription: BASIC | PRO | ULTRA | MEGA` plus the configured RapidAPI proxy secret.
+- Internal direct tests use `X-Plan` or `X-Sitetrace-Plan` only when `SITETRACE_INTERNAL_SECRET` is provided.
 
 ```
 X-Plan: free
@@ -148,7 +151,7 @@ Or use the alias header:
 X-Sitetrace-Plan: ultra
 ```
 
-Falls back to `free` if the header is absent or invalid. For RapidAPI/Zyla, configure your gateway to inject `X-Plan` based on the subscriber's active tier.
+Untrusted production requests fall back to `free` or are rejected with `401` when direct access is not authorized. Do not expose `X-Plan` as a public bypass.
 
 ---
 
@@ -158,7 +161,7 @@ For each individual API listing:
 - [ ] API name, short description (≤160 chars)
 - [ ] Category: **Data > Web Scraping** or **Tools > SEO**
 - [ ] Endpoint URL pointing to your deployed service
-- [ ] Authentication: `X-RapidAPI-Key` header (gateway injects `X-Plan`)
+- [ ] Authentication: `X-RapidAPI-Key` header plus RapidAPI proxy secret
 - [ ] Example request with working test URL
 - [ ] README from each API's `README.md`
 - [ ] 4 pricing tiers: Free / Pro / Ultra / Mega

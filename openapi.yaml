@@ -11,6 +11,8 @@ info:
 servers:
   - url: https://api-marketplace-b73f.onrender.com
     description: Production Render service
+security:
+  - RapidApiKey: []
 tags:
   - name: SEO
   - name: Crawlability
@@ -637,6 +639,8 @@ paths:
                       crawlability:
                         type: object
                         additionalProperties: true
+                      insights:
+                        $ref: "#/components/schemas/AuditInsights"
               example:
                 success: true
                 url: https://example.com/
@@ -651,6 +655,12 @@ paths:
         "502":
           $ref: "#/components/responses/UpstreamFailure"
 components:
+  securitySchemes:
+    RapidApiKey:
+      type: apiKey
+      in: header
+      name: X-RapidAPI-Key
+      description: RapidAPI gateway key. Direct production access also requires the configured RapidAPI proxy secret.
   parameters:
     RapidApiSubscription:
       name: X-RapidAPI-Subscription
@@ -754,6 +764,16 @@ components:
           example:
             success: false
             error: Failed to fetch or analyze URL
+    Unauthorized:
+      description: The request did not come through RapidAPI or an authorized internal client.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error: Unauthorized
+            message: Route access must come through RapidAPI or an authorized internal client.
   schemas:
     UrlRequest:
       type: object
@@ -824,6 +844,51 @@ components:
         analyzed_at:
           type: string
           format: date-time
+    AuditInsights:
+      type: object
+      properties:
+        executive_summary:
+          type: string
+        page_profile:
+          type: object
+          additionalProperties: true
+        top_priorities:
+          type: array
+          items:
+            type: object
+            properties:
+              priority:
+                type: string
+              area:
+                type: string
+              issue:
+                type: string
+              action:
+                type: string
+        quick_wins:
+          type: array
+          items:
+            type: string
+        content_opportunities:
+          type: array
+          items:
+            type: object
+            properties:
+              priority:
+                type: string
+              title:
+                type: string
+              primary_keyword:
+                type: string
+              supporting_keywords:
+                type: array
+                items:
+                  type: string
+              intent:
+                type: string
+        optional_content_plan:
+          type: object
+          additionalProperties: true
     ErrorResponse:
       type: object
       required:

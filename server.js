@@ -27,6 +27,8 @@
 const express = require('express');
 const cors    = require('cors');
 const { rateLimiter } = require('./shared/rateLimiter');
+const { marketplaceAuth } = require('./shared/auth');
+const { requestLogger } = require('./shared/requestLogger');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -34,6 +36,8 @@ app.set('trust proxy', 1);
 
 // ─── Global middleware ────────────────────────────────────────────────────────
 app.use(cors());
+app.use(marketplaceAuth);
+app.use(requestLogger);
 app.use(rateLimiter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
@@ -41,6 +45,8 @@ app.get('/health', (_req, res) => {
   res.json({
     status:  'ok',
     service: 'sitetrace-api-suite',
+    rapidapi_proxy_secret_configured: Boolean(process.env.RAPIDAPI_PROXY_SECRET),
+    internal_secret_configured: Boolean(process.env.SITETRACE_INTERNAL_SECRET),
     endpoints: [
       'POST /api/seo-snapshot',
       'POST /api/robots-analyzer',
@@ -52,6 +58,27 @@ app.get('/health', (_req, res) => {
       'POST /api/security-headers',
       'POST /api/business-lead-score',
       'POST /api/report-generator'
+    ]
+  });
+});
+
+app.get('/', (_req, res) => {
+  res.json({
+    success: true,
+    service: 'SiteTrace Website Intelligence API Suite',
+    health: '/health',
+    docs: 'Import openapi.yaml into RapidAPI or use the endpoint paths listed at /health.',
+    endpoints: [
+      '/api/seo-snapshot',
+      '/api/robots-analyzer',
+      '/api/sitemap-analyzer',
+      '/api/meta-preview',
+      '/api/schema-detector',
+      '/api/contact-extractor',
+      '/api/tech-stack',
+      '/api/security-headers',
+      '/api/business-lead-score',
+      '/api/report-generator'
     ]
   });
 });

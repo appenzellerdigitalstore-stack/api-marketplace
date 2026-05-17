@@ -4,19 +4,20 @@
  * Response depth is controlled by plan: free | pro | ultra | mega
  */
 const express = require('express');
-const axios = require('axios');
 const cheerio = require('cheerio');
-const { normalizeUrl, errorResponse, USER_AGENT } = require('../shared/utils');
+const { normalizeUrl, fetchPublicUrl, errorResponse, USER_AGENT } = require('../shared/utils');
 const { getPlan, filterByPlan } = require('../shared/planFilter');
 
 const app = express();
 app.use(express.json());
 
 async function fetchXml(url) {
-  return axios.get(url, {
-    timeout: 10000, proxy: false, validateStatus: () => true,
+  const { response } = await fetchPublicUrl(new URL(url), {
+    timeout: 10000,
+    accept: 'application/xml,text/xml,*/*',
     headers: { 'User-Agent': USER_AGENT, 'Accept': 'application/xml,text/xml,*/*' }
   });
+  return response;
 }
 
 function parseSitemapXml(xml) {
@@ -54,8 +55,9 @@ app.post('/api/sitemap-analyzer', async (req, res) => {
   ];
 
   try {
-    const robotsRes = await axios.get(`${urlObj.protocol}//${urlObj.hostname}/robots.txt`, {
-      timeout: 5000, proxy: false, validateStatus: () => true, headers: { 'User-Agent': USER_AGENT }
+    const { response: robotsRes } = await fetchPublicUrl(new URL(`${urlObj.protocol}//${urlObj.hostname}/robots.txt`), {
+      timeout: 5000,
+      headers: { 'User-Agent': USER_AGENT }
     });
     if (robotsRes.status === 200 && typeof robotsRes.data === 'string') {
       const matches = robotsRes.data.match(/^sitemap:\s*(.+)$/gim) || [];

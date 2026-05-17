@@ -6,8 +6,7 @@
  */
 const express = require('express');
 const cheerio = require('cheerio');
-const axios = require('axios');
-const { normalizeUrl, fetchPage, getSslInfo, errorResponse, USER_AGENT } = require('../shared/utils');
+const { normalizeUrl, fetchPublicUrl, fetchPage, getSslInfo, errorResponse, USER_AGENT } = require('../shared/utils');
 const { getPlan, filterByPlan } = require('../shared/planFilter');
 
 const app = express();
@@ -15,8 +14,9 @@ app.use(express.json());
 
 async function fetchRobots(urlObj) {
   try {
-    const r = await axios.get(`${urlObj.protocol}//${urlObj.hostname}/robots.txt`, {
-      timeout: 5000, proxy: false, validateStatus: () => true, headers: { 'User-Agent': USER_AGENT }
+    const { response: r } = await fetchPublicUrl(new URL(`${urlObj.protocol}//${urlObj.hostname}/robots.txt`), {
+      timeout: 5000,
+      headers: { 'User-Agent': USER_AGENT }
     });
     return r.status === 200 && typeof r.data === 'string' ? r.data : null;
   } catch { return null; }
@@ -24,8 +24,10 @@ async function fetchRobots(urlObj) {
 
 async function checkSitemap(urlObj) {
   try {
-    const r = await axios.get(`${urlObj.protocol}//${urlObj.hostname}/sitemap.xml`, {
-      timeout: 5000, proxy: false, validateStatus: () => true, headers: { 'User-Agent': USER_AGENT }
+    const { response: r } = await fetchPublicUrl(new URL(`${urlObj.protocol}//${urlObj.hostname}/sitemap.xml`), {
+      timeout: 5000,
+      accept: 'application/xml,text/xml,*/*',
+      headers: { 'User-Agent': USER_AGENT }
     });
     return r.status === 200;
   } catch { return false; }
@@ -38,6 +40,91 @@ function gradeFromScore(score) {
   if (score >= 60) return 'C';
   if (score >= 40) return 'D';
   return 'F';
+}
+
+function cleanWords(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/https?:\/\/\S+/g, ' ')
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .map((word) => word.trim())
+    .filter((word) => word.length > 3 && !['with', 'from', 'that', 'this', 'your', 'about', 'have', 'what', 'when', 'where', 'their', 'will', 'site', 'page', 'home'].includes(word));
+}
+
+function titleCase(value) {
+  return String(value || '').split(/\s+/).filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+function inferTopic({ title, metaDesc, h1s, domain }) {
+  const source = [h1s && h1s[0], title, metaDesc, domain].filter(Boolean).join(' ');
+  const counts = new Map();
+  cleanWords(source).forEach((word) => counts.set(word, (counts.get(word) || 0) + 1));
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([word]) => word);
+  return ranked.slice(0, 3).join(' ') || domain.replace(/^www\./, '').split('.')[0] || 'website';
+}
+
+function buildAuditInsights({ urlObj, title, metaDesc, h1s, wordCount, internalLinks, seoIssues, overallScore, scores }) {
+  const topic = inferTopic({ title, metaDesc, h1s, domain: urlObj.hostname });
+  const readableTopic = titleCase(topic);
+  const criticals = seoIssues.filter((issue) => issue.level === 'fail').length;
+  const warnings = seoIssues.filter((issue) => issue.level === 'warning').length;
+  const priorities = seoIssues.slice(0, 5).map((issue) => ({
+    priority: issue.level === 'fail' ? 'High' : 'Medium',
+    area: issue.field || 'seo',
+    issue: issue.message,
+    action: issue.field === 'meta_description'
+      ? 'Write a clear 50-165 character meta description focused on the page value.'
+      : issue.field === 'title'
+      ? 'Rewrite the title so it clearly combines topic, value, and brand.'
+      : issue.field === 'h1'
+      ? 'Use one clear H1 that matches the page purpose.'
+      : 'Review this issue and apply the recommended SEO fix.'
+  }));
+
+  return {
+    executive_summary: criticals
+      ? `This audit found ${criticals} critical issue${criticals === 1 ? '' : 's'} and ${warnings} warning${warnings === 1 ? '' : 's'}. Fix crawlability and snippet problems first, then improve page depth and internal linking.`
+      : `This page has a ${overallScore}/100 overall score. The next improvements are likely richer content, internal linking, structured data, and stronger search snippets.`,
+    page_profile: {
+      likely_topic: topic,
+      visible_word_count: wordCount,
+      internal_links: internalLinks,
+      score_breakdown: scores
+    },
+    top_priorities: priorities,
+    quick_wins: priorities.slice(0, 3).map((item) => item.action),
+    content_opportunities: [
+      {
+        priority: criticals || wordCount < 250 ? 'High' : 'Medium',
+        title: `${readableTopic}: What Visitors Should Know Before Choosing`,
+        primary_keyword: topic,
+        supporting_keywords: [`${topic} guide`, `${topic} benefits`, `${topic} questions`],
+        intent: 'Informational'
+      },
+      {
+        priority: internalLinks < 3 ? 'High' : 'Medium',
+        title: `How to Choose the Right ${readableTopic} Option`,
+        primary_keyword: `choose ${topic}`,
+        supporting_keywords: [`best ${topic}`, `${topic} comparison`, `${topic} checklist`],
+        intent: 'Commercial'
+      },
+      {
+        priority: metaDesc && title ? 'Medium' : 'High',
+        title: `${readableTopic} FAQs: Answers for New Visitors`,
+        primary_keyword: `${topic} faq`,
+        supporting_keywords: [`what is ${topic}`, `${topic} cost`, `${topic} process`],
+        intent: 'BOFU'
+      }
+    ],
+    optional_content_plan: {
+      phase_1: 'Confirm the page profile and target audience.',
+      phase_2: 'Choose which opportunity rows the client wants to turn into pages or content updates.',
+      phase_3: 'For each approved topic, prepare SEO title, meta description, H1, H2/H3 outline, FAQ section, internal links, CTA, and source notes.'
+    }
+  };
 }
 
 app.post('/api/report-generator', async (req, res) => {
@@ -137,6 +224,23 @@ app.post('/api/report-generator', async (req, res) => {
       (securityScore          * 0.25) +
       (contentRaw             * 0.15)
     );
+    const scores = {
+      seo:         Math.max(0, seoScore),
+      performance: performanceScore,
+      security:    securityScore,
+      content:     Math.min(100, Math.round(contentRaw))
+    };
+    const insights = buildAuditInsights({
+      urlObj,
+      title,
+      metaDesc,
+      h1s,
+      wordCount,
+      internalLinks: $('a[href]').length,
+      seoIssues,
+      overallScore: Math.min(100, overallScore),
+      scores
+    });
 
     const full = {
       success: true,
@@ -146,12 +250,8 @@ app.post('/api/report-generator', async (req, res) => {
       generated_at: new Date().toISOString(),
       overall_score: Math.min(100, overallScore),
       overall_grade: gradeFromScore(Math.min(100, overallScore)),
-      scores: {
-        seo:         Math.max(0, seoScore),
-        performance: performanceScore,
-        security:    securityScore,
-        content:     Math.min(100, Math.round(contentRaw))
-      },
+      scores,
+      insights,
       seo: {
         title,
         title_length:              title.length,

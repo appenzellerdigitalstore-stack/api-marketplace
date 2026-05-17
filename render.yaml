@@ -12,3 +12,7 @@ services:
         value: production
       - key: NPM_CONFIG_PRODUCTION
         value: "true"
+      - key: RAPIDAPI_PROXY_SECRET
+        sync: false
+      - key: SITETRACE_INTERNAL_SECRET
+        sync: false

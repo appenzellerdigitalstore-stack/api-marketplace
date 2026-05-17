@@ -4,8 +4,7 @@
  * Response depth is controlled by plan: free | pro | ultra | mega
  */
 const express = require('express');
-const axios = require('axios');
-const { normalizeUrl, errorResponse, USER_AGENT } = require('../shared/utils');
+const { normalizeUrl, fetchPublicUrl, errorResponse, USER_AGENT } = require('../shared/utils');
 const { getPlan, filterByPlan } = require('../shared/planFilter');
 
 const app = express();
@@ -52,8 +51,8 @@ app.post('/api/robots-analyzer', async (req, res) => {
   const robotsUrl = `${urlObj.protocol}//${urlObj.hostname}/robots.txt`;
 
   try {
-    const response = await axios.get(robotsUrl, {
-      timeout: 8000, proxy: false, validateStatus: () => true,
+    const { response } = await fetchPublicUrl(new URL(robotsUrl), {
+      timeout: 8000,
       headers: { 'User-Agent': USER_AGENT }
     });
 
