@@ -36,58 +36,57 @@ app.set('trust proxy', 1);
 
 // ─── Global middleware ────────────────────────────────────────────────────────
 app.use(cors());
+// Accept JSON body regardless of Content-Type (needed for Zyla Labs, api.market, etc.)
+app.use(express.json({ strict: false, type: () => true }));
+app.use(express.urlencoded({ extended: true }));
 app.use(marketplaceAuth);
 app.use(requestLogger);
 app.use(rateLimiter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
-  res.json({
-    status:  'ok',
-    service: 'sitetrace-api-suite',
-    rapidapi_proxy_secret_configured: Boolean(process.env.RAPIDAPI_PROXY_SECRET),
-    internal_secret_configured: Boolean(process.env.SITETRACE_INTERNAL_SECRET),
-    endpoints: [
-      'POST /api/seo-snapshot',
-      'POST /api/robots-analyzer',
-      'POST /api/sitemap-analyzer',
-      'POST /api/meta-preview',
-      'POST /api/schema-detector',
-      'POST /api/contact-extractor',
-      'POST /api/tech-stack',
-      'POST /api/security-headers',
-      'POST /api/business-lead-score',
-      'POST /api/report-generator'
-    ]
-  });
+    res.json({
+          status:  'ok',
+          service: 'sitetrace-api-suite',
+          rapidapi_proxy_secret_configured: Boolean(process.env.RAPIDAPI_PROXY_SECRET),
+          internal_secret_configured: Boolean(process.env.SITETRACE_INTERNAL_SECRET),
+          endpoints: [
+                  'POST /api/seo-snapshot',
+                  'POST /api/robots-analyzer',
+                  'POST /api/sitemap-analyzer',
+                  'POST /api/meta-preview',
+                  'POST /api/schema-detector',
+                  'POST /api/contact-extractor',
+                  'POST /api/tech-stack',
+                  'POST /api/security-headers',
+                  'POST /api/business-lead-score',
+                  'POST /api/report-generator'
+                ]
+    });
 });
 
 app.get('/', (_req, res) => {
-  res.json({
-    success: true,
-    service: 'SiteTrace Website Intelligence API Suite',
-    health: '/health',
-    docs: 'Import openapi.yaml into RapidAPI or use the endpoint paths listed at /health.',
-    endpoints: [
-      '/api/seo-snapshot',
-      '/api/robots-analyzer',
-      '/api/sitemap-analyzer',
-      '/api/meta-preview',
-      '/api/schema-detector',
-      '/api/contact-extractor',
-      '/api/tech-stack',
-      '/api/security-headers',
-      '/api/business-lead-score',
-      '/api/report-generator'
-    ]
-  });
+    res.json({
+          success: true,
+          service: 'SiteTrace Website Intelligence API Suite',
+          health: '/health',
+          docs: 'Import openapi.yaml into RapidAPI or use the endpoint paths listed at /health.',
+          endpoints: [
+                  '/api/seo-snapshot',
+                  '/api/robots-analyzer',
+                  '/api/sitemap-analyzer',
+                  '/api/meta-preview',
+                  '/api/schema-detector',
+                  '/api/contact-extractor',
+                  '/api/tech-stack',
+                  '/api/security-headers',
+                  '/api/business-lead-score',
+                  '/api/report-generator'
+                ]
+    });
 });
 
 // ─── Mount each API app ───────────────────────────────────────────────────────
-// Each sub-app registers its own route (e.g. app.post('/api/seo-snapshot', ...))
-// using its local express() instance. Mounting with app.use() exposes those
-// routes on the root server without any path prefix needed.
-
 app.use(require('./seo-snapshot/index'));
 app.use(require('./robots-analyzer/index'));
 app.use(require('./sitemap-analyzer/index'));
@@ -101,28 +100,17 @@ app.use(require('./report-generator/index'));
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {
-  res.status(404).json({
-    success: false,
-    error:   'Endpoint not found',
-    hint:    'Available endpoints are listed at GET /health'
-  });
+    res.status(404).json({
+          success: false,
+          error:   'Endpoint not found',
+          hint:    'Available endpoints are listed at GET /health'
+    });
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\nSiteTrace API Suite running on port ${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health\n`);
-  console.log('Endpoints:');
-  console.log(`  POST http://localhost:${PORT}/api/seo-snapshot`);
-  console.log(`  POST http://localhost:${PORT}/api/robots-analyzer`);
-  console.log(`  POST http://localhost:${PORT}/api/sitemap-analyzer`);
-  console.log(`  POST http://localhost:${PORT}/api/meta-preview`);
-  console.log(`  POST http://localhost:${PORT}/api/schema-detector`);
-  console.log(`  POST http://localhost:${PORT}/api/contact-extractor`);
-  console.log(`  POST http://localhost:${PORT}/api/tech-stack`);
-  console.log(`  POST http://localhost:${PORT}/api/security-headers`);
-  console.log(`  POST http://localhost:${PORT}/api/business-lead-score`);
-  console.log(`  POST http://localhost:${PORT}/api/report-generator`);
+    console.log(`\nSiteTrace API Suite running on port ${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/health\n`);
 });
 
 module.exports = app;
