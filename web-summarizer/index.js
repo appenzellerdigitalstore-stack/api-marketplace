@@ -78,7 +78,7 @@ function extractKeyPoints(text, count = 5) {
 
 app.post('/api/web-summarizer', async (req, res) => {
   const plan = getPlan(req);
-  const { url } = req.body;
+  const { url } = { ...req.query, ...req.body };
 
   let urlObj;
   try { urlObj = normalizeUrl(url); } catch (e) { return errorResponse(res, 400, e.message); }

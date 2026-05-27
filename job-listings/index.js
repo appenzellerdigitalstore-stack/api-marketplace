@@ -156,7 +156,7 @@ function scrapeGeneric($, baseUrl) {
 
 app.post('/api/job-listings', async (req, res) => {
   const plan = getPlan(req);
-  const { url, filter_location, filter_department, filter_remote } = req.body;
+  const { url, filter_location, filter_department, filter_remote } = { ...req.query, ...req.body };
 
   let urlObj;
   try { urlObj = normalizeUrl(url); } catch (e) { return errorResponse(res, 400, e.message); }

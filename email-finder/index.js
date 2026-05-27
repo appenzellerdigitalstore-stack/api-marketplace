@@ -122,7 +122,7 @@ async function findEmails(domain, plan) {
 
 app.post('/api/email-finder', async (req, res) => {
   const plan = getPlan(req);
-  let { domain, url } = req.body;
+  let { domain, url } = { ...req.query, ...req.body };
 
   // Accept domain or URL
   if (!domain && url) {
@@ -166,4 +166,4 @@ if (require.main === module) {
   app.listen(PORT, () => console.log(`email-finder running on port ${PORT}`));
 }
 
-module.exports = app;
+m

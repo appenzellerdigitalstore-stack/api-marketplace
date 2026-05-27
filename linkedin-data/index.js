@@ -117,7 +117,7 @@ function parseJob($, schema, og) {
 
 app.post('/api/linkedin-data', async (req, res) => {
   const plan = getPlan(req);
-  const { url } = req.body;
+  const { url } = { ...req.query, ...req.body };
 
   let urlObj;
   try { urlObj = normalizeUrl(url); } catch (e) { return errorResponse(res, 400, e.message); }

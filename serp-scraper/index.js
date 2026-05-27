@@ -128,7 +128,7 @@ function parseKnowledgePanel($) {
 
 app.post('/api/serp-scraper', async (req, res) => {
   const plan = getPlan(req);
-  const { query, q, num, lang, country, search_type } = req.body;
+  const { query, q, num, lang, country, search_type } = { ...req.query, ...req.body };
 
   const searchQuery = query || q;
   if (!searchQuery || typeof searchQuery !== 'string') {

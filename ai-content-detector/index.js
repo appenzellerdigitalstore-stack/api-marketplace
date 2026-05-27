@@ -173,7 +173,7 @@ function computeAIScore(text) {
 
 app.post('/api/ai-content-detector', (req, res) => {
   const plan = getPlan(req);
-  const { text } = req.body;
+  const { text } = { ...req.query, ...req.body };
 
   if (!text || typeof text !== 'string') {
     return errorResponse(res, 400, 'text is required');

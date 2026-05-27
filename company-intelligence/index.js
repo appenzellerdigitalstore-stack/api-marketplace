@@ -136,7 +136,7 @@ async function checkPageExists(baseUrl, path) {
 
 app.post('/api/company-intelligence', async (req, res) => {
   const plan = getPlan(req);
-  let { domain, url } = req.body;
+  let { domain, url } = { ...req.query, ...req.body };
 
   // Accept either domain or URL
   if (!domain && url) {
