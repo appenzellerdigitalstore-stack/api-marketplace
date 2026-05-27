@@ -1,12 +1,10 @@
 /**
  * server.js — SiteTrace API Suite (Consolidated)
  *
- * Single entry point for all 10 Website Intelligence API endpoints.
+ * Single entry point for all 20 API endpoints.
  * Deploy this file as one Render Web Service.
  *
- * Each API is still sold as a separate listing on RapidAPI because
- * every route has its own distinct path:
- *
+ * Original 10 (Website Intelligence):
  *   POST /api/seo-snapshot
  *   POST /api/robots-analyzer
  *   POST /api/sitemap-analyzer
@@ -17,6 +15,19 @@
  *   POST /api/security-headers
  *   POST /api/business-lead-score
  *   POST /api/report-generator
+ *
+ * New 10 (Marketplace Expansion):
+ *   POST /api/email-finder
+ *   POST /api/seo-audit
+ *   POST /api/web-summarizer
+ *   POST /api/company-intelligence
+ *   POST /api/review-scraper
+ *   POST /api/price-tracker
+ *   POST /api/ai-content-detector
+ *   POST /api/serp-scraper
+ *   POST /api/linkedin-data
+ *   POST /api/job-listings
+ *
  *   GET  /health
  *
  * Plan-aware logic is unchanged — pass X-Plan: free|pro|ultra|mega
@@ -36,6 +47,9 @@ app.set('trust proxy', 1);
 
 // ─── Global middleware ────────────────────────────────────────────────────────
 app.use(cors());
+// Accept JSON body regardless of Content-Type (needed for Zyla Labs, api.market, etc.)
+app.use(express.json({ strict: false, type: () => true }));
+app.use(express.urlencoded({ extended: true }));
 app.use(marketplaceAuth);
 app.use(requestLogger);
 app.use(rateLimiter);
@@ -57,7 +71,17 @@ app.get('/health', (_req, res) => {
       'POST /api/tech-stack',
       'POST /api/security-headers',
       'POST /api/business-lead-score',
-      'POST /api/report-generator'
+      'POST /api/report-generator',
+      'POST /api/email-finder',
+      'POST /api/seo-audit',
+      'POST /api/web-summarizer',
+      'POST /api/company-intelligence',
+      'POST /api/review-scraper',
+      'POST /api/price-tracker',
+      'POST /api/ai-content-detector',
+      'POST /api/serp-scraper',
+      'POST /api/linkedin-data',
+      'POST /api/job-listings'
     ]
   });
 });
@@ -65,20 +89,17 @@ app.get('/health', (_req, res) => {
 app.get('/', (_req, res) => {
   res.json({
     success: true,
-    service: 'SiteTrace Website Intelligence API Suite',
+    service: 'SiteTrace API Suite — 20 Endpoints',
     health: '/health',
     docs: 'Import openapi.yaml into RapidAPI or use the endpoint paths listed at /health.',
     endpoints: [
-      '/api/seo-snapshot',
-      '/api/robots-analyzer',
-      '/api/sitemap-analyzer',
-      '/api/meta-preview',
-      '/api/schema-detector',
-      '/api/contact-extractor',
-      '/api/tech-stack',
-      '/api/security-headers',
-      '/api/business-lead-score',
-      '/api/report-generator'
+      '/api/seo-snapshot', '/api/robots-analyzer', '/api/sitemap-analyzer',
+      '/api/meta-preview', '/api/schema-detector', '/api/contact-extractor',
+      '/api/tech-stack', '/api/security-headers', '/api/business-lead-score',
+      '/api/report-generator', '/api/email-finder', '/api/seo-audit',
+      '/api/web-summarizer', '/api/company-intelligence', '/api/review-scraper',
+      '/api/price-tracker', '/api/ai-content-detector', '/api/serp-scraper',
+      '/api/linkedin-data', '/api/job-listings'
     ]
   });
 });
@@ -88,6 +109,7 @@ app.get('/', (_req, res) => {
 // using its local express() instance. Mounting with app.use() exposes those
 // routes on the root server without any path prefix needed.
 
+// Original 10
 app.use(require('./seo-snapshot/index'));
 app.use(require('./robots-analyzer/index'));
 app.use(require('./sitemap-analyzer/index'));
@@ -98,6 +120,18 @@ app.use(require('./tech-stack/index'));
 app.use(require('./security-headers/index'));
 app.use(require('./business-lead-score/index'));
 app.use(require('./report-generator/index'));
+
+// New 10 — Marketplace Expansion
+app.use(require('./email-finder/index'));
+app.use(require('./seo-audit/index'));
+app.use(require('./web-summarizer/index'));
+app.use(require('./company-intelligence/index'));
+app.use(require('./review-scraper/index'));
+app.use(require('./price-tracker/index'));
+app.use(require('./ai-content-detector/index'));
+app.use(require('./serp-scraper/index'));
+app.use(require('./linkedin-data/index'));
+app.use(require('./job-listings/index'));
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {
@@ -112,17 +146,14 @@ app.use((_req, res) => {
 app.listen(PORT, () => {
   console.log(`\nSiteTrace API Suite running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health\n`);
-  console.log('Endpoints:');
-  console.log(`  POST http://localhost:${PORT}/api/seo-snapshot`);
-  console.log(`  POST http://localhost:${PORT}/api/robots-analyzer`);
-  console.log(`  POST http://localhost:${PORT}/api/sitemap-analyzer`);
-  console.log(`  POST http://localhost:${PORT}/api/meta-preview`);
-  console.log(`  POST http://localhost:${PORT}/api/schema-detector`);
-  console.log(`  POST http://localhost:${PORT}/api/contact-extractor`);
-  console.log(`  POST http://localhost:${PORT}/api/tech-stack`);
-  console.log(`  POST http://localhost:${PORT}/api/security-headers`);
-  console.log(`  POST http://localhost:${PORT}/api/business-lead-score`);
-  console.log(`  POST http://localhost:${PORT}/api/report-generator`);
+  const routes = [
+    'seo-snapshot','robots-analyzer','sitemap-analyzer','meta-preview','schema-detector',
+    'contact-extractor','tech-stack','security-headers','business-lead-score','report-generator',
+    'email-finder','seo-audit','web-summarizer','company-intelligence','review-scraper',
+    'price-tracker','ai-content-detector','serp-scraper','linkedin-data','job-listings'
+  ];
+  console.log(`\n${routes.length} endpoints active:`);
+  routes.forEach(r => console.log(`  POST http://localhost:${PORT}/api/${r}`));
 });
 
 module.exports = app;

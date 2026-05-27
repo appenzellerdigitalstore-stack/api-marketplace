@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
-  title: SiteTrace Website Intelligence API Suite
-  version: 1.0.0
+  title: SiteTrace API Suite
+  version: 2.0.0
   description: >
     Ten website intelligence endpoints for SEO, crawlability, social previews,
     structured data, contact extraction, tech stack detection, security headers,
@@ -932,3 +932,478 @@ components:
           example: 60
         retry_after_seconds:
           type: integer
+
+  /api/email-finder:
+    post:
+      summary: Email Finder
+      description: >
+        Given a domain, crawls contact/about/team pages and generates common
+        email patterns (info@, contact@, etc.), then verifies MX records for
+        deliverability. Returns confidence-scored email addresses.
+      operationId: emailFinder
+      tags:
+        - Lead Generation
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                domain:
+                  type: string
+                  example: example.com
+                url:
+                  type: string
+                  example: https://example.com
+      responses:
+        "200":
+          description: Email addresses found for the domain.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseAnalysisResponse"
+              example:
+                success: true
+                data:
+                  domain: example.com
+                  mx_records_found: true
+                  emails_found:
+                    - email: hello@example.com
+                      source: crawled
+                      confidence: high
+                  total_crawled: 1
+                  plan: pro
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/seo-audit:
+    post:
+      summary: SEO Audit
+      description: >
+        Full on-page SEO audit: title, meta description, H1–H6 headings,
+        image alt coverage, internal/external links, Open Graph, schema.org
+        types, canonical URL, robots meta, and a 0–100 SEO score with grade.
+      operationId: seoAudit
+      tags:
+        - SEO
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: SEO audit result with score and recommendations.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseAnalysisResponse"
+              example:
+                success: true
+                data:
+                  seo_score: 82
+                  grade: B
+                  issues: []
+                  warnings:
+                    - No canonical URL specified
+                  passed:
+                    - Title length is optimal
+                    - Single H1 tag present
+                  plan: pro
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/web-summarizer:
+    post:
+      summary: Web Summarizer & Reader
+      description: >
+        Extracts clean article content from any URL (removes ads, nav, sidebars)
+        and returns an extractive summary, key bullet points, reading time,
+        author, publish date, and word count.
+      operationId: webSummarizer
+      tags:
+        - Web Intelligence
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: Article summary and metadata.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseAnalysisResponse"
+              example:
+                success: true
+                data:
+                  title: Article Title
+                  summary: A concise extractive summary of the article content.
+                  word_count: 1240
+                  reading_time_min: 6
+                  author: Jane Doe
+                  plan: pro
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/company-intelligence:
+    post:
+      summary: Company Intelligence
+      description: >
+        Scrapes a company homepage for description, social links, contact info,
+        tech stack (30+ fingerprints), founding year, employee count signals,
+        and key pages (careers, blog, pricing). Returns structured company profile.
+      operationId: companyIntelligence
+      tags:
+        - Lead Generation
+        - Web Intelligence
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                domain:
+                  type: string
+                  example: stripe.com
+                url:
+                  type: string
+                  example: https://stripe.com
+      responses:
+        "200":
+          description: Company profile data.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseAnalysisResponse"
+              example:
+                success: true
+                data:
+                  domain: stripe.com
+                  company_name: Stripe
+                  tech_stack:
+                    - React
+                    - Next.js
+                    - Cloudflare
+                  social_links:
+                    twitter: https://twitter.com/stripe
+                    linkedin: https://linkedin.com/company/stripe
+                  plan: pro
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/review-scraper:
+    post:
+      summary: Review Scraper
+      description: >
+        Scrapes product or business reviews from public review pages including
+        Trustpilot, G2, Capterra, and any schema.org-marked review page.
+        Returns aggregate rating, individual reviews, and sentiment breakdown.
+      operationId: reviewScraper
+      tags:
+        - Web Intelligence
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: Reviews and aggregate rating.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseAnalysisResponse"
+              example:
+                success: true
+                data:
+                  platform: trustpilot
+                  aggregate_rating:
+                    score: 4.5
+                    count: 2300
+                  reviews_returned: 10
+                  sentiment_breakdown:
+                    positive: 8
+                    neutral: 1
+                    negative: 1
+                  plan: pro
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/price-tracker:
+    post:
+      summary: E-commerce Price Tracker
+      description: >
+        Extracts product price, title, availability, rating, images, and seller
+        info from any e-commerce product page. Uses schema.org, Open Graph, and
+        DOM heuristics. Supports Amazon, Shopify, WooCommerce, and generic stores.
+      operationId: priceTracker
+      tags:
+        - Web Intelligence
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: Product price and details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseAnalysisResponse"
+              example:
+                success: true
+                data:
+                  product_name: Wireless Headphones Pro
+                  price: 79.99
+                  currency: USD
+                  availability: InStock
+                  platform: shopify
+                  plan: pro
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/ai-content-detector:
+    post:
+      summary: AI Content Detector
+      description: >
+        Analyzes text for statistical signals of AI generation: burstiness,
+        vocabulary richness, passive voice density, AI phrase patterns, and
+        paragraph uniformity. Returns a 0–100 probability score and label.
+        No external API required — fully self-contained heuristics.
+      operationId: aiContentDetector
+      tags:
+        - Web Intelligence
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: The text to analyze (plain text, not HTML).
+                  example: In today's rapidly evolving landscape, it is important to note that...
+      responses:
+        "200":
+          description: AI probability score and signals.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseAnalysisResponse"
+              example:
+                success: true
+                data:
+                  ai_probability: 78
+                  label: likely_ai
+                  word_count: 320
+                  sentence_count: 14
+                  plan: pro
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/serp-scraper:
+    post:
+      summary: Google SERP Scraper
+      description: >
+        Fetches Google search results for a query and returns organic results
+        with title, URL, and snippet. Pro+ also returns featured snippet and
+        People Also Ask. Ultra/Mega adds related searches and knowledge panel.
+      operationId: serpScraper
+      tags:
+        - SEO
+        - Web Intelligence
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                  example: best project management tools 2025
+                num:
+                  type: integer
+                  description: Number of results (max depends on plan)
+                  example: 10
+                lang:
+                  type: string
+                  example: en
+                country:
+                  type: string
+                  example: us
+                search_type:
+                  type: string
+                  enum: [web, news, images]
+                  example: web
+      responses:
+        "200":
+          description: Search engine results page data.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseAnalysisResponse"
+              example:
+                success: true
+                data:
+                  query: best project management tools 2025
+                  total_results_returned: 10
+                  organic_results:
+                    - position: 1
+                      title: Top 10 PM Tools
+                      url: https://example.com/pm-tools
+                      snippet: A comprehensive guide to...
+                  plan: pro
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/linkedin-data:
+    post:
+      summary: LinkedIn Data Extractor
+      description: >
+        Extracts publicly available data from LinkedIn profiles, company pages,
+        and job postings using schema.org JSON-LD and Open Graph meta tags.
+        Works on public pages that don't require login.
+      operationId: linkedinData
+      tags:
+        - Lead Generation
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        $ref: "#/components/requestBodies/UrlRequest"
+      responses:
+        "200":
+          description: LinkedIn profile or company data.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseAnalysisResponse"
+              example:
+                success: true
+                data:
+                  page_type: person
+                  name: John Smith
+                  headline: Senior Software Engineer at Acme Corp
+                  location: San Francisco, CA
+                  connections: "500"
+                  plan: pro
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/job-listings:
+    post:
+      summary: Job Listings Aggregator
+      description: >
+        Scrapes job listings from company career pages or ATS platforms including
+        Greenhouse, Lever, Workday, BambooHR, and Ashby. Returns structured job
+        data with department, location, type, and apply URL. Supports filtering
+        by location, department, and remote status.
+      operationId: jobListings
+      tags:
+        - Lead Generation
+      parameters:
+        - $ref: "#/components/parameters/RapidApiSubscription"
+        - $ref: "#/components/parameters/SiteTracePlan"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  example: https://boards.greenhouse.io/acmecorp
+                filter_location:
+                  type: string
+                  example: New York
+                filter_department:
+                  type: string
+                  example: Engineering
+                filter_remote:
+                  type: boolean
+                  example: true
+      responses:
+        "200":
+          description: Job listings found on the page.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseAnalysisResponse"
+              example:
+                success: true
+                data:
+                  ats_platform: greenhouse
+                  total_found: 24
+                  jobs_returned: 24
+                  jobs:
+                    - title: Senior Backend Engineer
+                      department: Engineering
+                      location: Remote
+                      apply_url: https://boards.greenhouse.io/acmecorp/jobs/123
+                  plan: pro
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"

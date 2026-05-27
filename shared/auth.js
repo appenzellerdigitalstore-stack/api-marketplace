@@ -33,11 +33,11 @@ function marketplaceAuth(req, res, next) {
     return next();
   }
 
-  return res.status(401).json({
-    success: false,
-    error: 'Unauthorized',
-    message: 'Route access must come through RapidAPI or an authorized internal client.'
-  });
+  // Allow unauthenticated requests as free-tier public access.
+  // This enables multi-marketplace compatibility (Zyla Labs, api.market, etc.)
+  // while RapidAPI subscribers still receive plan-appropriate access via their proxy secret.
+  req.marketplaceAuth = 'public';
+  return next();
 }
 
 module.exports = { marketplaceAuth };
