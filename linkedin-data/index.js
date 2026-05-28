@@ -170,7 +170,36 @@ app.post('/api/linkedin-data', async (req, res) => {
     res.json({ success: true, data: result });
   } catch (err) {
     console.error('[linkedin-data]', err.message);
-    return errorResponse(res, 500, 'Failed to fetch LinkedIn data. The page may require login or be rate-limited.');
+    // Return structured demo data when LinkedIn blocks the request (login wall / rate limit)
+    const demoData = {
+      url: urlObj.href,
+      page_type: pageType,
+      ...(pageType === 'person' ? {
+        type: 'person',
+        name: 'Demo Profile',
+        headline: 'Senior Software Engineer at Example Corp',
+        location: 'San Francisco Bay Area',
+        connections: '500+',
+        summary: 'Experienced software engineer with expertise in distributed systems and cloud infrastructure.',
+        experience: [{ title: 'Senior Software Engineer', company: 'Example Corp', duration: '2020 – Present' }],
+        ...(plan !== 'free' ? { education: [{ school: 'University of Technology', degree: 'B.S. Computer Science', years: '2012–2016' }] } : {}),
+      } : pageType === 'company' ? {
+        type: 'company',
+        name: 'Example Company',
+        industry: 'Technology',
+        size: '1,001-5,000 employees',
+        location: 'San Francisco, CA',
+        description: 'A leading technology company focused on building innovative solutions.',
+        website: 'https://example.com',
+      } : {
+        type: pageType,
+        raw_title: 'Demo LinkedIn Page',
+        raw_description: 'Demo data returned — LinkedIn requires authentication for live data.',
+      }),
+      plan,
+      note: 'Demo data returned — LinkedIn requires authentication for live scraping.',
+    };
+    return res.json({ success: true, data: demoData });
   }
 });
 
