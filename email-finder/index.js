@@ -166,4 +166,4 @@ if (require.main === module) {
   app.listen(PORT, () => console.log(`email-finder running on port ${PORT}`));
 }
 
-m
+module.exports = app;
