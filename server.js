@@ -56,7 +56,6 @@ app.use(rateLimiter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
-<<<<<<< HEAD
   res.json({
     status:  'ok',
     service: 'sitetrace-api-suite',
@@ -109,52 +108,6 @@ app.get('/', (_req, res) => {
 // Each sub-app registers its own route (e.g. app.post('/api/seo-snapshot', ...))
 // using its local express() instance. Mounting with app.use() exposes those
 // routes on the root server without any path prefix needed.
-
-// Original 10
-=======
-    res.json({
-          status:  'ok',
-          service: 'sitetrace-api-suite',
-          rapidapi_proxy_secret_configured: Boolean(process.env.RAPIDAPI_PROXY_SECRET),
-          internal_secret_configured: Boolean(process.env.SITETRACE_INTERNAL_SECRET),
-          endpoints: [
-                  'POST /api/seo-snapshot',
-                  'POST /api/robots-analyzer',
-                  'POST /api/sitemap-analyzer',
-                  'POST /api/meta-preview',
-                  'POST /api/schema-detector',
-                  'POST /api/contact-extractor',
-                  'POST /api/tech-stack',
-                  'POST /api/security-headers',
-                  'POST /api/business-lead-score',
-                  'POST /api/report-generator'
-                ]
-    });
-});
-
-app.get('/', (_req, res) => {
-    res.json({
-          success: true,
-          service: 'SiteTrace Website Intelligence API Suite',
-          health: '/health',
-          docs: 'Import openapi.yaml into RapidAPI or use the endpoint paths listed at /health.',
-          endpoints: [
-                  '/api/seo-snapshot',
-                  '/api/robots-analyzer',
-                  '/api/sitemap-analyzer',
-                  '/api/meta-preview',
-                  '/api/schema-detector',
-                  '/api/contact-extractor',
-                  '/api/tech-stack',
-                  '/api/security-headers',
-                  '/api/business-lead-score',
-                  '/api/report-generator'
-                ]
-    });
-});
-
-// ─── Mount each API app ───────────────────────────────────────────────────────
->>>>>>> 8775ddd136d841be2628337fdc678ec86c8c34fc
 app.use(require('./seo-snapshot/index'));
 app.use(require('./robots-analyzer/index'));
 app.use(require('./sitemap-analyzer/index'));
@@ -189,7 +142,6 @@ app.use((_req, res) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-<<<<<<< HEAD
   console.log(`\nSiteTrace API Suite running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health\n`);
   const routes = [
@@ -200,10 +152,6 @@ app.listen(PORT, () => {
   ];
   console.log(`\n${routes.length} endpoints active:`);
   routes.forEach(r => console.log(`  POST http://localhost:${PORT}/api/${r}`));
-=======
-    console.log(`\nSiteTrace API Suite running on port ${PORT}`);
-    console.log(`Health check: http://localhost:${PORT}/health\n`);
->>>>>>> 8775ddd136d841be2628337fdc678ec86c8c34fc
 });
 
 module.exports = app;
