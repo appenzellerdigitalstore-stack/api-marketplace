@@ -1,13 +1,5 @@
 /**
  * /api/linkedin-data
- * Extracts public LinkedIn profile and company page data from public URLs.
- * Uses Open Graph meta tags, JSON-LD schema, and DOM heuristics on
- * publicly accessible (non-login-gated) LinkedIn pages.
- *
- * Supports:
- *  - Public person profiles (/in/username)
- *  - Company pages (/company/name)
- *  - Job postings (/jobs/view/...)
  */
 const express = require('express');
 const cheerio = require('cheerio');
@@ -59,19 +51,18 @@ function extractOG($) {
 function parsePerson($, schema, og) {
   const name = schema?.name || og?.title?.split(' - ')[0] || null;
   const headline = schema?.jobTitle ||
-    $('h2, [class*="headline"], [class*="top-card-layout__headline"]').first().text().trim() ||
-    og?.description?.split('·')[0]?.trim() || null;
+    $('h2, [class*="headline"]').first().text().trim() ||
+    og?.description?.split(' | ')[0]?.trim() || null;
 
-  // Try to parse "X connections" or "X followers" from description
   const desc = og?.description || $('meta[name="description"]').attr('content') || '';
   const connMatch = desc.match(/([\d,]+)\s*(?:connections?|followers?)/i);
   const connections = connMatch ? connMatch[1].replace(/,/g, '') : null;
 
   const location = schema?.address?.addressLocality ||
-    $('[class*="location"], [class*="subline"]').first().text().trim().slice(0, 80) || null;
+    $('[class*="location"]').first().text().trim().slice(0, 80) || null;
 
   const company = schema?.worksFor?.[0]?.name ||
-    $('[class*="company"], [class*="employer"]').first().text().trim().slice(0, 60) || null;
+    $('[class*="company"]').first().text().trim().slice(0, 60) || null;
 
   const education = (schema?.alumniOf || []).map(e => e?.name || e).filter(Boolean).slice(0, 3);
 
@@ -85,11 +76,11 @@ function parseCompany($, schema, og) {
   const desc = og?.description || $('meta[name="description"]').attr('content') || '';
   const followerMatch = desc.match(/([\d,]+)\s*followers?/i);
   const followers = followerMatch ? followerMatch[1].replace(/,/g, '') : null;
-  const empMatch = desc.match(/([\d,]+(?:[\–\-]\d+)?)\s*employees?/i);
+  const empMatch = desc.match(/([\d,]+(?:[-]\d+)?)\s*employees?/i);
   const employees = empMatch ? empMatch[1] : null;
 
   const industry = schema?.industry ||
-    $('[class*="industry"], [class*="company-industries"]').first().text().trim().slice(0, 80) || null;
+    $('[class*="industry"]').first().text().trim().slice(0, 80) || null;
   const website = schema?.url || schema?.sameAs?.[0] || null;
   const founded = schema?.foundingDate || null;
   const hq = schema?.address?.addressLocality || null;
@@ -101,15 +92,14 @@ function parseCompany($, schema, og) {
 function parseJob($, schema, og) {
   const title = schema?.title || og?.title?.split(' - ')[0] || null;
   const company = schema?.hiringOrganization?.name ||
-    $('[class*="company-name"], [class*="topcard__org"]').first().text().trim() || null;
+    $('[class*="company-name"]').first().text().trim() || null;
   const location = schema?.jobLocation?.address?.addressLocality ||
-    schema?.jobLocation?.address?.addressRegion ||
     $('[class*="location"]').first().text().trim().slice(0, 80) || null;
   const description = (schema?.description || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 500);
   const employment_type = schema?.employmentType || null;
   const posted = schema?.datePosted || null;
   const salary = schema?.baseSalary?.value?.value
-    ? `${schema.baseSalary.value.value} ${schema.baseSalary.currency || ''}`
+    ? String(schema.baseSalary.value.value) + ' ' + (schema.baseSalary.currency || '')
     : null;
 
   return { type: 'job', title, company, location, employment_type, posted, salary, description };
@@ -142,18 +132,16 @@ app.post('/api/linkedin-data', async (req, res) => {
     const og = extractOG($);
 
     let parsed;
-    if (pageType === 'person')  parsed = parsePerson($, schema, og);
+    if (pageType === 'person')       parsed = parsePerson($, schema, og);
     else if (pageType === 'company') parsed = parseCompany($, schema, og);
     else if (pageType === 'job')     parsed = parseJob($, schema, og);
     else parsed = { type: pageType, raw_title: og?.title, raw_description: og?.description };
 
-    // Plan-based field filtering
     const result = {
       url: urlObj.href,
       page_type: pageType,
       ...parsed,
       ...(plan !== 'free' ? {} : {
-        // On free plan, strip some fields
         education: undefined,
         salary: undefined,
         description: undefined,
@@ -164,48 +152,35 @@ app.post('/api/linkedin-data', async (req, res) => {
       plan,
     };
 
-    // Clean undefined keys
     Object.keys(result).forEach(k => result[k] === undefined && delete result[k]);
 
     res.json({ success: true, data: result });
   } catch (err) {
     console.error('[linkedin-data]', err.message);
-    // Return structured demo data when LinkedIn blocks the request (login wall / rate limit)
     const demoData = {
       url: urlObj.href,
       page_type: pageType,
-      ...(pageType === 'person' ? {
-        type: 'person',
-        name: 'Demo Profile',
-        headline: 'Senior Software Engineer at Example Corp',
-        location: 'San Francisco Bay Area',
-        connections: '500+',
-        summary: 'Experienced software engineer with expertise in distributed systems and cloud infrastructure.',
-        experience: [{ title: 'Senior Software Engineer', company: 'Example Corp', duration: '2020 – Present' }],
-        ...(plan !== 'free' ? { education: [{ school: 'University of Technology', degree: 'B.S. Computer Science', years: '2012–2016' }] } : {}),
-      } : pageType === 'company' ? {
-        type: 'company',
-        name: 'Example Company',
-        industry: 'Technology',
-        size: '1,001-5,000 employees',
-        location: 'San Francisco, CA',
-        description: 'A leading technology company focused on building innovative solutions.',
-        website: 'https://example.com',
-      } : {
-        type: pageType,
-        raw_title: 'Demo LinkedIn Page',
-        raw_description: 'Demo data returned — LinkedIn requires authentication for live data.',
-      }),
+      type: pageType === 'company' ? 'company' : 'person',
+      name: pageType === 'company' ? 'Example Company' : 'Demo Profile',
+      headline: pageType !== 'company' ? 'Senior Software Engineer at Example Corp' : undefined,
+      location: pageType === 'company' ? 'San Francisco, CA' : 'San Francisco Bay Area',
+      connections: pageType !== 'company' ? '500+' : undefined,
+      industry: pageType === 'company' ? 'Technology' : undefined,
+      size: pageType === 'company' ? '1,001-5,000 employees' : undefined,
+      description: pageType === 'company' ? 'A leading technology company focused on building innovative solutions.' : undefined,
+      website: pageType === 'company' ? 'https://example.com' : undefined,
+      summary: pageType !== 'company' ? 'Experienced software engineer with expertise in distributed systems.' : undefined,
       plan,
       note: 'Demo data returned — LinkedIn requires authentication for live scraping.',
     };
+    Object.keys(demoData).forEach(k => demoData[k] === undefined && delete demoData[k]);
     return res.json({ success: true, data: demoData });
   }
 });
 
 if (require.main === module) {
   const PORT = process.env.PORT || 3019;
-  app.listen(PORT, () => console.log(`linkedin-data running on port ${PORT}`));
+  app.listen(PORT, () => console.log('linkedin-data running on port ' + PORT));
 }
 
 module.exports = app;
