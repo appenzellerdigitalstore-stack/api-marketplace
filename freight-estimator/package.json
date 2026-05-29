@@ -1,0 +1,7 @@
+{
+  "name": "sitetrace-freight-estimator",
+  "version": "1.0.0",
+  "description": "SiteTrace freight-estimator API",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" }
+}

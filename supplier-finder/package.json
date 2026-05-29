@@ -1,0 +1,7 @@
+{
+  "name": "sitetrace-supplier-finder",
+  "version": "1.0.0",
+  "description": "SiteTrace supplier-finder API",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" }
+}

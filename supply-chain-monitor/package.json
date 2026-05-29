@@ -1,0 +1,7 @@
+{
+  "name": "sitetrace-supply-chain-monitor",
+  "version": "1.0.0",
+  "description": "SiteTrace supply-chain-monitor API",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" }
+}

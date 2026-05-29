@@ -1,0 +1,7 @@
+{
+  "name": "sitetrace-spam-shield",
+  "version": "1.0.0",
+  "description": "SiteTrace spam-shield API",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" }
+}

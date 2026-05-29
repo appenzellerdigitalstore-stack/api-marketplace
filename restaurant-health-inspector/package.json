@@ -1,0 +1,7 @@
+{
+  "name": "sitetrace-restaurant-health-inspector",
+  "version": "1.0.0",
+  "description": "SiteTrace restaurant-health-inspector API",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" }
+}

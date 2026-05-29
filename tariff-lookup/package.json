@@ -1,0 +1,7 @@
+{
+  "name": "sitetrace-tariff-lookup",
+  "version": "1.0.0",
+  "description": "SiteTrace tariff-lookup API",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" }
+}

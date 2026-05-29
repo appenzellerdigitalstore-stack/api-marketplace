@@ -1,0 +1,7 @@
+{
+  "name": "sitetrace-meal-planner",
+  "version": "1.0.0",
+  "description": "SiteTrace meal-planner API",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "sitetrace-phone-intelligence",
+  "version": "1.0.0",
+  "description": "SiteTrace phone-intelligence API",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" }
+}

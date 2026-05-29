@@ -1,0 +1,7 @@
+{
+  "name": "sitetrace-nutrition-analyzer",
+  "version": "1.0.0",
+  "description": "SiteTrace nutrition-analyzer API",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "sitetrace-food-allergen-checker",
+  "version": "1.0.0",
+  "description": "SiteTrace food-allergen-checker API",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" }
+}

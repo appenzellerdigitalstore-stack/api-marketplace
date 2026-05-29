@@ -1,0 +1,7 @@
+{
+  "name": "sitetrace-business-risk-scorer",
+  "version": "1.0.0",
+  "description": "SiteTrace business-risk-scorer API",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "sitetrace-contact-enricher",
+  "version": "1.0.0",
+  "description": "SiteTrace contact-enricher API",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" }
+}
