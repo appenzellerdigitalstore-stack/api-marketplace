@@ -1,6 +1,6 @@
 /**
  * server.js - SiteTrace API Suite (Consolidated)
- * Single entry point for all 20 API endpoints.
+ * Single entry point for all 35 API endpoints.
  * Plan-aware logic: pass X-Plan: free|pro|ultra|mega
  */
 
@@ -18,8 +18,6 @@ app.set('trust proxy', 1);
 
 // Global middleware
 app.use(cors());
-app.use(express.json({ strict: false, type: () => true }));
-app.use(express.urlencoded({ extended: true }));
 app.use(marketplaceAuth);
 app.use(requestLogger);
 app.use(rateLimiter);
@@ -60,20 +58,27 @@ app.get('/health', function(_req, res) {
 });
 
 app.get('/', function(_req, res) {
+  var endpoints = [
+    '/api/seo-snapshot', '/api/robots-analyzer', '/api/sitemap-analyzer',
+    '/api/meta-preview', '/api/schema-detector', '/api/contact-extractor',
+    '/api/tech-stack', '/api/security-headers', '/api/business-lead-score',
+    '/api/report-generator', '/api/email-finder', '/api/seo-audit',
+    '/api/web-summarizer', '/api/company-intelligence', '/api/review-scraper',
+    '/api/price-tracker', '/api/ai-content-detector', '/api/serp-scraper',
+    '/api/linkedin-data', '/api/job-listings', '/api/nutrition-analyzer',
+    '/api/meal-planner', '/api/food-allergen-checker', '/api/restaurant-health-inspector',
+    '/api/supplement-checker', '/api/phone-intelligence', '/api/email-health',
+    '/api/contact-enricher', '/api/spam-shield', '/api/identity-risk-scorer',
+    '/api/supply-chain-monitor', '/api/supplier-finder', '/api/tariff-lookup',
+    '/api/business-risk-scorer', '/api/freight-estimator'
+  ];
+
   res.json({
     success: true,
     service: 'SiteTrace API Suite - 35 Endpoints',
     health: '/health',
     docs: 'Import openapi.yaml into RapidAPI or use the endpoint paths listed at /health.',
-    endpoints: [
-      '/api/seo-snapshot', '/api/robots-analyzer', '/api/sitemap-analyzer',
-      '/api/meta-preview', '/api/schema-detector', '/api/contact-extractor',
-      '/api/tech-stack', '/api/security-headers', '/api/business-lead-score',
-      '/api/report-generator', '/api/email-finder', '/api/seo-audit',
-      '/api/web-summarizer', '/api/company-intelligence', '/api/review-scraper',
-      '/api/price-tracker', '/api/ai-content-detector', '/api/serp-scraper',
-      '/api/linkedin-data', '/api/job-listings'
-    ]
+    endpoints: endpoints
   });
 });
 
@@ -135,6 +140,7 @@ app.listen(PORT, function() {
     'seo-snapshot','robots-analyzer','sitemap-analyzer','meta-preview','schema-detector',
     'contact-extractor','tech-stack','security-headers','business-lead-score','report-generator',
     'email-finder','seo-audit','web-summarizer','company-intelligence','review-scraper',
+    'price-tracker','ai-content-detector','serp-scraper','linkedin-data','job-listings',
     'price-tracker','ai-content-detector','serp-scraper','linkedin-data','job-listings',
     'nutrition-analyzer','meal-planner','food-allergen-checker','restaurant-health-inspector','supplement-checker',
     'phone-intelligence','email-health','contact-enricher','spam-shield','identity-risk-scorer',

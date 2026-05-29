@@ -1,10 +1,11 @@
 /**
  * /api/review-scraper
  * Scrapes product/business reviews from public review pages.
- * Supports: Trustpilot, G2, Capterra, Product Hunt, and generic review schemas.
- * Returns: rating, review count, individual reviews, sentiment breakdown.
+ * Primary: Trustpilot public consumer API (no auth). Fallback: HTML + schema.org.
+ * Supports: Trustpilot, G2, Capterra, Product Hunt, generic schema.org reviews.
  */
 const express = require('express');
+const axios   = require('axios');
 const cheerio = require('cheerio');
 const { normalizeUrl, fetchPage, errorResponse } = require('../shared/utils');
 const { getPlan } = require('../shared/planFilter');
@@ -14,14 +15,55 @@ app.use(express.json({ strict: false, type: () => true }));
 app.use(express.urlencoded({ extended: true }));
 
 // ──────────────────────────────────────────────
-// Platform-specific scrapers
+// Trustpilot public consumer API (no auth needed)
+// ──────────────────────────────────────────────
+
+async function fetchTrustpilotAPI(urlStr) {
+  try {
+    const domainMatch = urlStr.match(/trustpilot\.com\/review\/([^/?#]+)/i);
+    const domain = domainMatch ? domainMatch[1] : null;
+    if (!domain) return null;
+
+    const buResp = await axios.get(
+      `https://www.trustpilot.com/api/categoriespages-frontend-service/business-units/find?name=${encodeURIComponent(domain)}`,
+      { timeout: 10000, headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } }
+    );
+    const bu = buResp.data;
+    if (!bu || !bu.id) return null;
+
+    const score = bu.score || {};
+    const aggregateRating = {
+      score: score.trustScore || null,
+      count: score.numberOfReviews || null,
+      best: 5,
+    };
+
+    const revResp = await axios.get(
+      `https://www.trustpilot.com/api/categoriespages-frontend-service/business-units/${bu.id}/reviews?perPage=20&language=en`,
+      { timeout: 10000, headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } }
+    );
+    const reviews = ((revResp.data || {}).reviews || []).map(r => ({
+      author: r.consumer && r.consumer.displayName ? r.consumer.displayName : 'Anonymous',
+      rating: r.stars || null,
+      title:  r.title || null,
+      body:   (r.text || '').slice(0, 500),
+      date:   r.dates && r.dates.publishedDate ? r.dates.publishedDate.split('T')[0] : null,
+    }));
+
+    return { platform: 'trustpilot', aggregateRating, reviews, businessName: bu.displayName || domain };
+  } catch (e) {
+    return null;
+  }
+}
+
+// ──────────────────────────────────────────────
+// Platform-specific HTML scrapers
 // ──────────────────────────────────────────────
 
 function scrapeTrustpilot($, html) {
   const reviews = [];
-
-  // Rating from schema.org JSON-LD
   let aggregateRating = null;
+
   $('script[type="application/ld+json"]').each((_, el) => {
     try {
       const json = JSON.parse($(el).html());
@@ -30,28 +72,26 @@ function scrapeTrustpilot($, html) {
         aggregateRating = {
           score: parseFloat(data.aggregateRating.ratingValue) || null,
           count: parseInt(data.aggregateRating.reviewCount) || null,
-          best: parseFloat(data.aggregateRating.bestRating) || 5,
+          best:  parseFloat(data.aggregateRating.bestRating) || 5,
         };
       }
       if (data.review) {
         (Array.isArray(data.review) ? data.review : [data.review]).forEach(r => {
           reviews.push({
-            author: r.author?.name || 'Anonymous',
-            rating: parseFloat(r.reviewRating?.ratingValue) || null,
-            title: r.name || null,
-            body: r.reviewBody || null,
-            date: r.datePublished || null,
+            author: r.author && r.author.name ? r.author.name : 'Anonymous',
+            rating: parseFloat(r.reviewRating && r.reviewRating.ratingValue) || null,
+            title:  r.name || null,
+            body:   r.reviewBody || null,
+            date:   r.datePublished || null,
           });
         });
       }
-    } catch {}
+    } catch (_) {}
   });
 
-  // Fallback: scrape review cards from DOM
   if (reviews.length === 0) {
     $('[data-service-review-card-paper], .review-card, article[class*="review"]').each((_, el) => {
-      const rating = $(el).find('[data-rating], [class*="star"]').attr('data-rating') ||
-                     $(el).find('img[alt*="star"]').length || null;
+      const rating = $(el).find('[data-rating], [class*="star"]').attr('data-rating') || null;
       const author = $(el).find('[class*="consumer"], [class*="author"]').first().text().trim();
       const title  = $(el).find('h2, [class*="title"]').first().text().trim();
       const body   = $(el).find('p, [class*="text"], [class*="body"]').first().text().trim();
@@ -63,7 +103,7 @@ function scrapeTrustpilot($, html) {
   return { platform: 'trustpilot', aggregateRating, reviews };
 }
 
-function scrapeG2($, html) {
+function scrapeG2($) {
   const reviews = [];
   let aggregateRating = null;
 
@@ -78,10 +118,9 @@ function scrapeG2($, html) {
           best: 5,
         };
       }
-    } catch {}
+    } catch (_) {}
   });
 
-  // G2 review cards
   $('[itemprop="review"], .paper, [class*="review-card"]').each((_, el) => {
     const author = $(el).find('[itemprop="author"], [class*="reviewer"]').first().text().trim();
     const rating = parseFloat($(el).find('[itemprop="ratingValue"]').attr('content') || '0') || null;
@@ -94,7 +133,7 @@ function scrapeG2($, html) {
   return { platform: 'g2', aggregateRating, reviews };
 }
 
-function scrapeGenericSchema($, html, urlStr) {
+function scrapeGenericSchema($, urlStr) {
   const reviews = [];
   let aggregateRating = null;
 
@@ -107,38 +146,36 @@ function scrapeGenericSchema($, html, urlStr) {
           aggregateRating = {
             score: parseFloat(data.aggregateRating.ratingValue) || null,
             count: parseInt(data.aggregateRating.reviewCount || data.aggregateRating.ratingCount) || null,
-            best: parseFloat(data.aggregateRating.bestRating) || 5,
+            best:  parseFloat(data.aggregateRating.bestRating) || 5,
           };
         }
         const revList = data.review || data.reviews || [];
         (Array.isArray(revList) ? revList : [revList]).forEach(r => {
           if (!r || typeof r !== 'object') return;
           reviews.push({
-            author: r.author?.name || r.author || 'Anonymous',
-            rating: parseFloat(r.reviewRating?.ratingValue || r.ratingValue) || null,
-            title: r.name || r.headline || null,
-            body: (r.reviewBody || r.description || '').slice(0, 500),
-            date: r.datePublished || null,
+            author: (r.author && (r.author.name || r.author)) || 'Anonymous',
+            rating: parseFloat((r.reviewRating && r.reviewRating.ratingValue) || r.ratingValue) || null,
+            title:  r.name || r.headline || null,
+            body:   (r.reviewBody || r.description || '').slice(0, 500),
+            date:   r.datePublished || null,
           });
         });
       });
-    } catch {}
+    } catch (_) {}
   });
 
-  // Microdata fallback
   if (!aggregateRating) {
     const rv = $('[itemprop="ratingValue"]').first().attr('content') || $('[itemprop="ratingValue"]').first().text();
     const rc = $('[itemprop="reviewCount"]').first().attr('content') || $('[itemprop="reviewCount"]').first().text();
     if (rv) aggregateRating = { score: parseFloat(rv), count: parseInt(rc) || null, best: 5 };
   }
 
-  // Determine source platform
   let platform = 'generic';
-  if (urlStr.includes('trustpilot.com')) platform = 'trustpilot';
-  else if (urlStr.includes('g2.com')) platform = 'g2';
-  else if (urlStr.includes('capterra.com')) platform = 'capterra';
+  if (urlStr.includes('trustpilot.com'))  platform = 'trustpilot';
+  else if (urlStr.includes('g2.com'))     platform = 'g2';
+  else if (urlStr.includes('capterra.com'))    platform = 'capterra';
   else if (urlStr.includes('producthunt.com')) platform = 'producthunt';
-  else if (urlStr.includes('yelp.com')) platform = 'yelp';
+  else if (urlStr.includes('yelp.com'))        platform = 'yelp';
   else if (urlStr.includes('tripadvisor.com')) platform = 'tripadvisor';
 
   return { platform, aggregateRating, reviews };
@@ -157,7 +194,7 @@ function computeSentiment(reviews) {
     positive,
     neutral,
     negative,
-    positive_pct: total > 0 ? `${Math.round((positive / total) * 100)}%` : 'N/A',
+    positive_pct: total > 0 ? Math.round((positive / total) * 100) + '%' : 'N/A',
   };
 }
 
@@ -169,20 +206,29 @@ app.post('/api/review-scraper', async (req, res) => {
   try { urlObj = normalizeUrl(url); } catch (e) { return errorResponse(res, 400, e.message); }
 
   try {
-    const { response } = await fetchPage(urlObj);
-    const html = typeof response.data === 'string' ? response.data : '';
-    const $ = cheerio.load(html);
     const urlStr = urlObj.href;
-
     let scraped;
-    if (urlStr.includes('trustpilot.com')) scraped = scrapeTrustpilot($, html);
-    else if (urlStr.includes('g2.com')) scraped = scrapeG2($, html);
-    else scraped = scrapeGenericSchema($, html, urlStr);
 
-    // Plan-based review cap
+    // ── Try Trustpilot public API first ──────────────────────────────────────
+    if (urlStr.includes('trustpilot.com')) {
+      const apiResult = await fetchTrustpilotAPI(urlStr);
+      if (apiResult && (apiResult.aggregateRating || apiResult.reviews.length > 0)) {
+        scraped = apiResult;
+      } else {
+        const { response } = await fetchPage(urlObj);
+        const html = typeof response.data === 'string' ? response.data : '';
+        scraped = scrapeTrustpilot(cheerio.load(html), html);
+      }
+    } else {
+      const { response } = await fetchPage(urlObj);
+      const html = typeof response.data === 'string' ? response.data : '';
+      const $ = cheerio.load(html);
+      if (urlStr.includes('g2.com')) scraped = scrapeG2($);
+      else scraped = scrapeGenericSchema($, urlStr);
+    }
+
     const maxReviews = plan === 'free' ? 3 : plan === 'pro' ? 10 : 25;
     const reviews = scraped.reviews.slice(0, maxReviews);
-
     const sentiment = plan !== 'free' ? computeSentiment(scraped.reviews) : undefined;
 
     const result = {
@@ -204,7 +250,7 @@ app.post('/api/review-scraper', async (req, res) => {
 
 if (require.main === module) {
   const PORT = process.env.PORT || 3015;
-  app.listen(PORT, () => console.log(`review-scraper running on port ${PORT}`));
+  app.listen(PORT, () => console.log('review-scraper running on port ' + PORT));
 }
 
 module.exports = app;
