@@ -9,11 +9,23 @@ const { normalizeUrl, fetchPage, getSslInfo, errorResponse } = require('../share
 const { getPlan, filterByPlan } = require('../shared/planFilter');
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ strict: false, type: () => true }));
+app.use(express.urlencoded({ extended: true }));
+
+function readPayload(req) {
+  if (req.body && typeof req.body.request_body === 'string') {
+    try {
+      return { ...req.query, ...JSON.parse(req.body.request_body) };
+    } catch (_) {
+      return { ...req.query, request_body: req.body.request_body };
+    }
+  }
+  return { ...req.query, ...(req.body || {}) };
+}
 
 app.post('/api/seo-snapshot', async (req, res) => {
   const plan = getPlan(req);
-  const { url } = req.body;
+  const { url } = readPayload(req);
 
   let urlObj;
   try { urlObj = normalizeUrl(url); } catch (e) { return errorResponse(res, 400, e.message); }
