@@ -1,0 +1,330 @@
+openapi: 3.0.3
+info:
+  title: Business Risk Scorer API — Composite Credit & Failure Risk from Domain & Firmographics
+  version: 1.0.0
+  description: >
+    Score the credit and failure risk of any business in seconds. Submit a company name,
+    domain, industry, years in business, employee count, and revenue — and get back a
+    composite risk score (0–100), a risk level (VERY LOW / LOW / MEDIUM / HIGH),
+    creditworthiness rating, and recommended payment terms.
+
+    **How it works**
+
+    The API blends three risk dimensions:
+
+    - **Financial signals** — years in business, employee count, and revenue tier each
+      carry actuarial weights derived from SMB failure-rate research.
+    - **Web presence** — live website check, SSL, phone listing, about/terms pages, and
+      LinkedIn signal (Pro+ plans only) contribute up to 50 points to the composite score.
+    - **Industry risk** — 14 industry verticals carry a base risk rate; unknown industries
+      default to 40/100.
+
+    The composite is a weighted blend: 50% financial, 20% inverse web-presence, 30% industry.
+
+    **Plans**
+
+    | Plan | Web presence check | Risk breakdown | Signals array | Recommendations |
+    |------|--------------------|---------------|---------------|-----------------|
+    | Free | ✗ | ✗ | ✗ | ✗ |
+    | Pro  | ✓ | ✓ | ✓ | ✗ |
+    | Ultra/Mega | ✓ | ✓ | ✓ | ✓ |
+
+    **Example use-cases**
+
+    - Accounts receivable teams deciding payment terms before extending credit
+    - Vendor onboarding workflows screening new suppliers
+    - B2B SaaS tools adding a risk widget to prospect profiles
+    - Fintech apps pre-qualifying SMB loan applicants
+
+    **Base URL:** `https://api-marketplace-b73f.onrender.com`
+
+    **Authentication:** Pass your RapidAPI key in the `X-RapidAPI-Key` header (handled automatically by the RapidAPI proxy).
+
+    **Quick start with API Market proxy cURL:**
+
+    ```bash
+    curl -X POST https://api-marketplace-b73f.onrender.com/api/business-risk-scorer \
+      -H "Content-Type: application/json" \
+      -H "X-RapidAPI-Key: YOUR_RAPIDAPI_KEY" \
+      -d '{
+        "company_name": "Acme Retail Co",
+        "domain": "acmeretail.com",
+        "industry": "retail",
+        "years_in_business": 2,
+        "employees": 12,
+        "revenue": 450000
+      }'
+    ```
+
+    **Sample response (Pro plan):**
+
+    ```json
+    {
+      "success": true,
+      "analyzed_at": "2025-01-15T10:23:45.000Z",
+      "company": "Acme Retail Co",
+      "overall_risk_score": 58,
+      "risk_level": "MEDIUM",
+      "creditworthiness": "Fair",
+      "recommended_payment_terms": "Net 15 with deposit",
+      "risk_breakdown": {
+        "financial_risk": 62,
+        "web_presence_score": 80,
+        "industry_risk": 45
+      },
+      "industry_outlook": {
+        "industry": "retail",
+        "base": 45,
+        "volatility": "high",
+        "outlook": "challenging"
+      },
+      "signals": [
+        { "factor": "early_stage_1_3yr", "risk_added": 15, "detail": "1-3 years — early stage, elevated risk" },
+        { "factor": "website_live", "positive": true },
+        { "factor": "linkedin_linked", "positive": true }
+      ],
+      "plan": "pro"
+    }
+    ```
+  contact:
+    name: SiteTrace
+servers:
+  - url: https://api-marketplace-b73f.onrender.com
+    description: Production Render service
+security:
+  - RapidApiKey: []
+tags:
+  - name: Risk Scoring
+  - name: Credit & Finance
+  - name: Lead Generation
+paths:
+  /api/business-risk-scorer:
+    post:
+      summary: Score Business Credit & Failure Risk
+      description: >
+        Submit company firmographics (name, domain, industry, age, headcount, revenue)
+        and receive a composite 0–100 risk score, risk level, creditworthiness label,
+        and recommended payment terms. Pro+ plans also return a full risk breakdown,
+        industry outlook, and signal array. Ultra/Mega adds actionable recommendations
+        and a risk-profile comparison.
+      operationId: businessRiskScorer
+      tags:
+        - Risk Scoring
+        - Credit & Finance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusinessRiskRequest"
+            example:
+              company_name: Acme Retail Co
+              domain: acmeretail.com
+              industry: retail
+              years_in_business: 2
+              employees: 12
+              revenue: 450000
+      responses:
+        "200":
+          description: Business risk score and analysis.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessRiskResponse"
+              example:
+                success: true
+                analyzed_at: "2025-01-15T10:23:45.000Z"
+                company: Acme Retail Co
+                overall_risk_score: 58
+                risk_level: MEDIUM
+                creditworthiness: Fair
+                recommended_payment_terms: Net 15 with deposit
+                plan: pro
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+components:
+  securitySchemes:
+    RapidApiKey:
+      type: apiKey
+      in: header
+      name: X-RapidAPI-Key
+      description: RapidAPI gateway key — provided automatically by the RapidAPI proxy.
+  schemas:
+    BusinessRiskRequest:
+      type: object
+      properties:
+        company_name:
+          type: string
+          description: Legal or trading name of the business.
+          example: Acme Retail Co
+        domain:
+          type: string
+          description: Primary domain of the business website (e.g. acmeretail.com). Used for web-presence checks on Pro+ plans.
+          example: acmeretail.com
+        industry:
+          type: string
+          description: >
+            Industry vertical. Supported values: technology, retail, restaurant, construction,
+            healthcare, finance, manufacturing, real estate, logistics, legal, education,
+            hospitality, energy, media. Unknown industries default to a base risk of 40.
+          example: retail
+        years_in_business:
+          type: integer
+          description: How many years the business has been operating.
+          example: 2
+        employees:
+          type: integer
+          description: Current headcount.
+          example: 12
+        revenue:
+          type: number
+          description: Annual revenue in USD.
+          example: 450000
+        country:
+          type: string
+          description: Country of operation (informational; does not affect scoring in the current version).
+          example: US
+    BusinessRiskResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        analyzed_at:
+          type: string
+          format: date-time
+        company:
+          type: string
+          example: Acme Retail Co
+        overall_risk_score:
+          type: integer
+          description: Composite risk score 0–100. Higher = more risky.
+          example: 58
+        risk_level:
+          type: string
+          enum: [VERY LOW, LOW, MEDIUM, HIGH]
+          example: MEDIUM
+        creditworthiness:
+          type: string
+          enum: [Excellent, Good, Fair, Poor]
+          example: Fair
+        recommended_payment_terms:
+          type: string
+          example: Net 15 with deposit
+        risk_breakdown:
+          type: object
+          description: Available on Pro+ plans.
+          properties:
+            financial_risk:
+              type: integer
+            web_presence_score:
+              type: integer
+            industry_risk:
+              type: integer
+        industry_outlook:
+          type: object
+          description: Available on Pro+ plans.
+          properties:
+            industry:
+              type: string
+            base:
+              type: integer
+            volatility:
+              type: string
+            outlook:
+              type: string
+        signals:
+          type: array
+          description: Available on Pro+ plans.
+          items:
+            type: object
+            properties:
+              factor:
+                type: string
+              positive:
+                type: boolean
+              risk_added:
+                type: integer
+              detail:
+                type: string
+        recommendations:
+          type: array
+          description: Available on Ultra/Mega plans.
+          items:
+            type: object
+            properties:
+              action:
+                type: string
+              priority:
+                type: string
+        similar_risk_profile:
+          type: string
+          description: Available on Ultra/Mega plans.
+        plan:
+          type: string
+          enum: [free, pro, ultra, mega]
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+    RateLimitResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Rate limit exceeded
+        plan:
+          type: string
+        limit:
+          type: integer
+        window_seconds:
+          type: integer
+        retry_after_seconds:
+          type: integer
+  responses:
+    BadRequest:
+      description: Missing required fields (company_name or domain).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error: Provide company_name or domain
+    RateLimited:
+      description: Rate limit exceeded for the active plan.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RateLimitResponse"
+          example:
+            success: false
+            error: Rate limit exceeded
+            plan: free
+            limit: 5
+            window_seconds: 60
+            retry_after_seconds: 60
+    ServerError:
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error: Internal server error

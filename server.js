@@ -141,7 +141,6 @@ app.listen(PORT, function() {
     'contact-extractor','tech-stack','security-headers','business-lead-score','report-generator',
     'email-finder','seo-audit','web-summarizer','company-intelligence','review-scraper',
     'price-tracker','ai-content-detector','serp-scraper','linkedin-data','job-listings',
-    'price-tracker','ai-content-detector','serp-scraper','linkedin-data','job-listings',
     'nutrition-analyzer','meal-planner','food-allergen-checker','restaurant-health-inspector','supplement-checker',
     'phone-intelligence','email-health','contact-enricher','spam-shield','identity-risk-scorer',
     'supply-chain-monitor','supplier-finder','tariff-lookup','business-risk-scorer','freight-estimator'

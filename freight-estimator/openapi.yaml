@@ -1,0 +1,395 @@
+openapi: 3.0.3
+info:
+  title: Freight Estimator API — Instant Shipping Quotes for Air, Ocean, Ground & Express
+  version: 1.0.0
+  description: >
+    Get instant freight cost estimates across multiple carriers and shipping modes —
+    no account or registration required. Submit origin/destination country, shipment
+    weight, and optional dimensions; receive ranked quotes with total cost, transit
+    time, and carrier name.
+
+    **Shipping modes supported**
+
+    | Mode | Carriers included |
+    |------|------------------|
+    | Air | FedEx, UPS, DHL, Emirates SkyCargo, Lufthansa Cargo |
+    | Ocean | Maersk, MSC, CMA CGM, COSCO, Hapag-Lloyd |
+    | Ground | FedEx, UPS, USPS, DHL Parcel, FreightQuote LTL |
+    | Express | FedEx First Overnight, UPS Next Day Air, DHL Express 9:00 |
+
+    **How pricing is calculated**
+
+    Each quote applies the carrier's base rate per kg, dimensional-weight logic
+    (L×W×H / 5000), a fuel surcharge percentage, and a minimum charge floor.
+    Ocean shipments over 500 kg switch to per-container pricing. Distances between
+    major country pairs are pre-computed; unknown routes fall back to an 8,000 km default.
+
+    **Plans**
+
+    | Plan | Quotes returned | Dimensional weight | Distance & insurance | Carbon estimate & recommendation |
+    |------|----------------|-------------------|---------------------|----------------------------------|
+    | Free | 2 per mode (basic fields) | ✗ | ✗ | ✗ |
+    | Pro  | 3 per mode (full fields) | ✓ | ✓ | ✗ |
+    | Ultra/Mega | 5 per mode (full fields) | ✓ | ✓ | ✓ |
+
+    **Example use-cases**
+
+    - E-commerce checkout showing real-time shipping cost estimates
+    - Import/export dashboards comparing air vs. ocean cost/speed tradeoffs
+    - Logistics procurement tools benchmarking carrier options
+    - Supply chain apps triggering alerts when freight costs spike
+
+    **Base URL:** `https://api-marketplace-b73f.onrender.com`
+
+    **Authentication:** Pass your RapidAPI key in the `X-RapidAPI-Key` header (handled automatically by the RapidAPI proxy).
+
+    **Quick start with API Market proxy cURL:**
+
+    ```bash
+    curl -X POST https://api-marketplace-b73f.onrender.com/api/freight-estimator \
+      -H "Content-Type: application/json" \
+      -H "X-RapidAPI-Key: YOUR_RAPIDAPI_KEY" \
+      -d '{
+        "origin_country": "US",
+        "destination_country": "DE",
+        "weight_kg": 50,
+        "dimensions_cm": "60x40x30",
+        "mode": "air",
+        "value_usd": 5000
+      }'
+    ```
+
+    **Sample response (Pro plan):**
+
+    ```json
+    {
+      "success": true,
+      "estimated_at": "2025-01-15T10:23:45.000Z",
+      "shipment": {
+        "origin": "US",
+        "destination": "DE",
+        "weight_kg": 50,
+        "chargeable_weight_kg": 57.6
+      },
+      "cheapest_option": {
+        "carrier": "DHL Express Worldwide",
+        "mode": "air",
+        "total_usd": 497.41,
+        "transit_days": 3
+      },
+      "fastest_option": {
+        "carrier": "FedEx International Priority",
+        "mode": "air",
+        "total_usd": 554.26,
+        "transit_days": 2
+      },
+      "quotes": [
+        {
+          "carrier": "DHL Express Worldwide",
+          "mode": "air",
+          "transit_days": 3,
+          "base_charge": 414.72,
+          "fuel_surcharge": 87.09,
+          "total_usd": 501.81,
+          "reliability_pct": 97,
+          "chargeable_weight_kg": 57.6,
+          "distance_km": 8000,
+          "insurance_estimate": 25.0
+        }
+      ],
+      "plan": "pro"
+    }
+    ```
+  contact:
+    name: SiteTrace
+servers:
+  - url: https://api-marketplace-b73f.onrender.com
+    description: Production Render service
+security:
+  - RapidApiKey: []
+tags:
+  - name: Freight & Logistics
+  - name: Shipping
+paths:
+  /api/freight-estimator:
+    post:
+      summary: Get Freight Shipping Quotes
+      description: >
+        Submit origin country, destination country, weight, and optional dimensions to
+        receive ranked shipping quotes across air, ocean, ground, and express carriers.
+        The `mode` field filters to a specific shipping type; omitting it returns the
+        most relevant modes for the route (air + ocean for international, ground + express
+        for domestic). Dimensional weight (L×W×H / 5000) is applied automatically when
+        dimensions are provided.
+      operationId: freightEstimator
+      tags:
+        - Freight & Logistics
+        - Shipping
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FreightRequest"
+            example:
+              origin_country: US
+              destination_country: DE
+              weight_kg: 50
+              dimensions_cm: "60x40x30"
+              mode: air
+              value_usd: 5000
+      responses:
+        "200":
+          description: Freight quotes sorted by total cost.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FreightResponse"
+              example:
+                success: true
+                estimated_at: "2025-01-15T10:23:45.000Z"
+                shipment:
+                  origin: US
+                  destination: DE
+                  weight_kg: 50
+                  chargeable_weight_kg: 57.6
+                cheapest_option:
+                  carrier: DHL Express Worldwide
+                  mode: air
+                  total_usd: 497.41
+                  transit_days: 3
+                fastest_option:
+                  carrier: FedEx International Priority
+                  mode: air
+                  total_usd: 554.26
+                  transit_days: 2
+                quotes:
+                  - carrier: DHL Express Worldwide
+                    mode: air
+                    transit_days: 3
+                    base_charge: 414.72
+                    fuel_surcharge: 82.94
+                    total_usd: 497.66
+                    reliability_pct: 97
+                plan: pro
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+components:
+  securitySchemes:
+    RapidApiKey:
+      type: apiKey
+      in: header
+      name: X-RapidAPI-Key
+      description: RapidAPI gateway key — provided automatically by the RapidAPI proxy.
+  schemas:
+    FreightRequest:
+      type: object
+      required:
+        - origin_country
+        - destination_country
+        - weight_kg
+      properties:
+        origin_country:
+          type: string
+          description: ISO 3166-1 alpha-2 country code for the shipment origin.
+          example: US
+        destination_country:
+          type: string
+          description: ISO 3166-1 alpha-2 country code for the shipment destination.
+          example: DE
+        weight_kg:
+          type: number
+          description: Actual shipment weight in kilograms.
+          example: 50
+        dimensions_cm:
+          type: string
+          description: >
+            Package dimensions as "LxWxH" in centimetres (e.g. "60x40x30").
+            Used to calculate dimensional weight; the higher of actual vs. dimensional
+            weight is used as the chargeable weight.
+          example: "60x40x30"
+        mode:
+          type: string
+          enum: [air, ocean, ground, express]
+          description: >
+            Shipping mode filter. Omit to auto-select the most relevant modes for the
+            route (air + ocean for international; ground + express for domestic).
+          example: air
+        freight_class:
+          type: string
+          description: NMFC freight class for LTL ground shipments (informational).
+          example: "70"
+        cargo_type:
+          type: string
+          description: Description of the cargo type (informational).
+          example: electronics
+        value_usd:
+          type: number
+          description: Declared cargo value in USD. Used to compute an insurance estimate on Pro+ plans (0.5% of value).
+          example: 5000
+    FreightResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        estimated_at:
+          type: string
+          format: date-time
+        shipment:
+          type: object
+          properties:
+            origin:
+              type: string
+              example: US
+            destination:
+              type: string
+              example: DE
+            weight_kg:
+              type: number
+              example: 50
+            chargeable_weight_kg:
+              type: number
+              example: 57.6
+        cheapest_option:
+          type: object
+          properties:
+            carrier:
+              type: string
+            mode:
+              type: string
+            total_usd:
+              type: number
+            transit_days:
+              type: integer
+        fastest_option:
+          type: object
+          properties:
+            carrier:
+              type: string
+            mode:
+              type: string
+            total_usd:
+              type: number
+            transit_days:
+              type: integer
+        quotes:
+          type: array
+          description: All quotes sorted by total cost.
+          items:
+            type: object
+            properties:
+              carrier:
+                type: string
+              mode:
+                type: string
+                enum: [air, ocean, ground, express]
+              transit_days:
+                type: integer
+              base_charge:
+                type: number
+              fuel_surcharge:
+                type: number
+              total_usd:
+                type: number
+              reliability_pct:
+                type: integer
+                description: Carrier on-time reliability percentage (0–100).
+              chargeable_weight_kg:
+                type: number
+                description: Available on Pro+ plans.
+              distance_km:
+                type: integer
+                description: Available on Pro+ plans.
+              insurance_estimate:
+                type: number
+                description: Estimated insurance cost (0.5% of value_usd). Available on Pro+ when value_usd is provided.
+        customs_estimate:
+          type: object
+          description: Customs de-minimis information for international shipments. Ultra/Mega plans only.
+          properties:
+            note:
+              type: string
+            de_minimis_threshold:
+              type: string
+        carbon_estimate_kg_co2:
+          type: object
+          description: CO₂ emission estimates by mode. Ultra/Mega plans only.
+          properties:
+            air:
+              type: number
+            ocean:
+              type: number
+            ground:
+              type: number
+        recommendation:
+          type: string
+          description: Cost vs. speed recommendation text. Ultra/Mega plans only.
+        plan:
+          type: string
+          enum: [free, pro, ultra, mega]
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+    RateLimitResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Rate limit exceeded
+        plan:
+          type: string
+        limit:
+          type: integer
+        window_seconds:
+          type: integer
+        retry_after_seconds:
+          type: integer
+  responses:
+    BadRequest:
+      description: Missing required fields (origin_country, destination_country, or weight_kg).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error: origin_country and destination_country are required
+    RateLimited:
+      description: Rate limit exceeded for the active plan.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RateLimitResponse"
+          example:
+            success: false
+            error: Rate limit exceeded
+            plan: free
+            limit: 5
+            window_seconds: 60
+            retry_after_seconds: 60
+    ServerError:
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error: Internal server error

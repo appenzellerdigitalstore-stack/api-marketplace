@@ -654,285 +654,6 @@ paths:
           $ref: "#/components/responses/RateLimited"
         "502":
           $ref: "#/components/responses/UpstreamFailure"
-components:
-  securitySchemes:
-    RapidApiKey:
-      type: apiKey
-      in: header
-      name: X-RapidAPI-Key
-      description: RapidAPI gateway key. Direct production access also requires the configured RapidAPI proxy secret.
-  parameters:
-    RapidApiSubscription:
-      name: X-RapidAPI-Subscription
-      in: header
-      required: false
-      description: RapidAPI plan header. BASIC maps to free, PRO maps to pro, ULTRA maps to ultra, and MEGA maps to mega.
-      schema:
-        type: string
-        enum:
-          - BASIC
-          - PRO
-          - ULTRA
-          - MEGA
-      example: PRO
-    SiteTracePlan:
-      name: X-Plan
-      in: header
-      required: false
-      description: Direct/internal plan override. If omitted, the API defaults to free unless X-RapidAPI-Subscription is present.
-      schema:
-        type: string
-        enum:
-          - free
-          - pro
-          - ultra
-          - mega
-      example: pro
-  headers:
-    XRateLimitPlan:
-      description: Effective plan used by the API.
-      schema:
-        type: string
-        enum:
-          - free
-          - pro
-          - ultra
-          - mega
-    XRateLimitLimit:
-      description: Maximum requests allowed in the current one-minute window.
-      schema:
-        type: integer
-    XRateLimitRemaining:
-      description: Remaining requests in the current one-minute window.
-      schema:
-        type: integer
-    XRateLimitReset:
-      description: Unix timestamp when the current rate-limit window resets.
-      schema:
-        type: integer
-  requestBodies:
-    UrlRequest:
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/UrlRequest"
-          example:
-            url: https://example.com
-  responses:
-    BadRequest:
-      description: Invalid request, missing URL, unsupported protocol, or private/local URL.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-          example:
-            success: false
-            error: Private/local network URLs are not supported
-    RateLimited:
-      description: The request exceeded the active plan's per-minute rate limit.
-      headers:
-        Retry-After:
-          description: Seconds until the client should retry.
-          schema:
-            type: integer
-        X-RateLimit-Plan:
-          $ref: "#/components/headers/XRateLimitPlan"
-        X-RateLimit-Limit:
-          $ref: "#/components/headers/XRateLimitLimit"
-        X-RateLimit-Remaining:
-          $ref: "#/components/headers/XRateLimitRemaining"
-        X-RateLimit-Reset:
-          $ref: "#/components/headers/XRateLimitReset"
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/RateLimitResponse"
-          example:
-            success: false
-            error: Rate limit exceeded
-            plan: free
-            limit: 5
-            window_seconds: 60
-            retry_after_seconds: 60
-    UpstreamFailure:
-      description: The target website could not be fetched or analyzed.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-          example:
-            success: false
-            error: Failed to fetch or analyze URL
-    Unauthorized:
-      description: The request did not come through RapidAPI or an authorized internal client.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-          example:
-            success: false
-            error: Unauthorized
-            message: Route access must come through RapidAPI or an authorized internal client.
-  schemas:
-    UrlRequest:
-      type: object
-      required:
-        - url
-      properties:
-        url:
-          type: string
-          format: uri
-          description: Public HTTP or HTTPS website URL to analyze.
-          example: https://example.com
-        max_urls:
-          type: integer
-          description: Optional sitemap result limit for /api/sitemap-analyzer.
-          minimum: 1
-          maximum: 2000
-          example: 500
-    HealthResponse:
-      type: object
-      required:
-        - status
-        - service
-        - endpoints
-      properties:
-        status:
-          type: string
-          example: ok
-        service:
-          type: string
-          example: sitetrace-api-suite
-        endpoints:
-          type: array
-          items:
-            type: string
-    BaseAnalysisResponse:
-      type: object
-      required:
-        - success
-        - url
-      properties:
-        success:
-          type: boolean
-        url:
-          type: string
-          format: uri
-        status_code:
-          type: integer
-        analyzed_at:
-          type: string
-          format: date-time
-        final_url:
-          type: string
-          format: uri
-    BaseDomainResponse:
-      type: object
-      required:
-        - success
-      properties:
-        success:
-          type: boolean
-        url:
-          type: string
-          format: uri
-        domain:
-          type: string
-        status_code:
-          type: integer
-        analyzed_at:
-          type: string
-          format: date-time
-    AuditInsights:
-      type: object
-      properties:
-        executive_summary:
-          type: string
-        page_profile:
-          type: object
-          additionalProperties: true
-        top_priorities:
-          type: array
-          items:
-            type: object
-            properties:
-              priority:
-                type: string
-              area:
-                type: string
-              issue:
-                type: string
-              action:
-                type: string
-        quick_wins:
-          type: array
-          items:
-            type: string
-        content_opportunities:
-          type: array
-          items:
-            type: object
-            properties:
-              priority:
-                type: string
-              title:
-                type: string
-              primary_keyword:
-                type: string
-              supporting_keywords:
-                type: array
-                items:
-                  type: string
-              intent:
-                type: string
-        optional_content_plan:
-          type: object
-          additionalProperties: true
-    ErrorResponse:
-      type: object
-      required:
-        - success
-        - error
-      properties:
-        success:
-          type: boolean
-          example: false
-        error:
-          type: string
-        detail:
-          type: string
-    RateLimitResponse:
-      type: object
-      required:
-        - success
-        - error
-        - plan
-        - limit
-        - window_seconds
-        - retry_after_seconds
-      properties:
-        success:
-          type: boolean
-          example: false
-        error:
-          type: string
-          example: Rate limit exceeded
-        plan:
-          type: string
-          enum:
-            - free
-            - pro
-            - ultra
-            - mega
-        limit:
-          type: integer
-        window_seconds:
-          type: integer
-          example: 60
-        retry_after_seconds:
-          type: integer
-
   /api/email-finder:
     post:
       summary: Email Finder
@@ -1407,3 +1128,1023 @@ components:
           $ref: "#/components/responses/RateLimited"
         "500":
           $ref: "#/components/responses/ServerError"
+  /api/nutrition-analyzer:
+    post:
+      summary: Nutrition Analyzer
+      description: Get instant macro & micro nutrient breakdown for any food item or recipe. Returns calories, protein, carbs, fat, fiber, sugar, vitamins, and minerals per serving.
+      operationId: nutritionAnalyzer
+      tags:
+        - Food & Health
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                food:
+                  type: string
+                  example: apple
+                ingredients:
+                  type: array
+                  items:
+                    type: string
+                  example: ["100g chicken breast", "50g rice"]
+                grams:
+                  type: number
+                  example: 100
+                serving_size:
+                  type: string
+                  example: 1 cup
+            example:
+              food: apple
+              grams: 100
+      responses:
+        "200":
+          description: Nutritional breakdown result.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                food: apple
+                serving_grams: 100
+                nutrients:
+                  calories: 52
+                  protein_g: 0.3
+                  carbs_g: 14
+                  fat_g: 0.2
+                  fiber_g: 2.4
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/meal-planner:
+    post:
+      summary: Meal Planner
+      description: Generate personalized weekly meal plans instantly based on dietary goals, restrictions, and calorie targets.
+      operationId: mealPlanner
+      tags:
+        - Food & Health
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                goal:
+                  type: string
+                  example: weight_loss
+                calories_per_day:
+                  type: integer
+                  example: 1800
+                dietary_restrictions:
+                  type: array
+                  items:
+                    type: string
+                  example: ["vegetarian"]
+                days:
+                  type: integer
+                  example: 7
+            example:
+              goal: weight_loss
+              calories_per_day: 1800
+              days: 7
+      responses:
+        "200":
+          description: Weekly meal plan.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                plan:
+                  - day: Monday
+                    meals:
+                      breakfast: Oatmeal with berries
+                      lunch: Grilled chicken salad
+                      dinner: Salmon with vegetables
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/food-allergen-checker:
+    post:
+      summary: Food Allergen Checker
+      description: Scan ingredients for 16 major allergens including gluten, dairy, nuts, soy, shellfish, and more.
+      operationId: foodAllergenChecker
+      tags:
+        - Food & Health
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ingredients:
+                  type: array
+                  items:
+                    type: string
+                  example: ["wheat flour", "milk", "eggs", "butter"]
+                recipe_name:
+                  type: string
+                  example: chocolate cake
+                check_allergens:
+                  type: array
+                  items:
+                    type: string
+                  example: ["gluten", "dairy", "eggs"]
+            example:
+              ingredients: ["wheat flour", "milk", "eggs", "butter"]
+      responses:
+        "200":
+          description: Allergen scan result.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                allergens_found: ["gluten", "dairy", "eggs"]
+                safe_for: ["nuts-free", "shellfish-free"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/restaurant-health-inspector:
+    post:
+      summary: Restaurant Health Inspector
+      description: Access public health inspection records and scores for restaurants by name and location.
+      operationId: restaurantHealthInspector
+      tags:
+        - Food & Health
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                restaurant_name:
+                  type: string
+                  example: McDonalds
+                address:
+                  type: string
+                  example: 123 Main St
+                city:
+                  type: string
+                  example: New York
+                state:
+                  type: string
+                  example: NY
+                zip:
+                  type: string
+                  example: "10001"
+            example:
+              restaurant_name: McDonalds
+              city: New York
+              state: NY
+      responses:
+        "200":
+          description: Health inspection records.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                restaurant: McDonalds
+                score: 92
+                grade: A
+                inspections: []
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/supplement-checker:
+    post:
+      summary: Supplement Checker
+      description: Analyze supplement stacks for interactions, timing recommendations, and overdose risk.
+      operationId: supplementChecker
+      tags:
+        - Food & Health
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                supplements:
+                  type: array
+                  items:
+                    type: string
+                  example: ["vitamin C 1000mg", "zinc 50mg", "magnesium 400mg"]
+                goal:
+                  type: string
+                  example: immune support
+                age:
+                  type: integer
+                  example: 30
+                weight_kg:
+                  type: number
+                  example: 75
+            example:
+              supplements: ["vitamin C 1000mg", "zinc 50mg"]
+              goal: immune support
+      responses:
+        "200":
+          description: Supplement analysis result.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                interactions: []
+                timing_recommendations: []
+                overdose_risks: []
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/phone-intelligence:
+    post:
+      summary: Phone Intelligence
+      description: Get line type, carrier, spam score, and fraud risk for any phone number.
+      operationId: phoneIntelligence
+      tags:
+        - Identity & Fraud
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone:
+                  type: string
+                  example: "+12025551234"
+            example:
+              phone: "+12025551234"
+      responses:
+        "200":
+          description: Phone intelligence result.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                phone: "+12025551234"
+                line_type: mobile
+                carrier: AT&T
+                spam_score: 5
+                fraud_risk: low
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/email-health:
+    post:
+      summary: Email Health
+      description: Validate email addresses, check breach status, and score deliverability.
+      operationId: emailHealth
+      tags:
+        - Identity & Fraud
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                emails:
+                  type: array
+                  items:
+                    type: string
+                  example: ["user@example.com", "test@domain.com"]
+            example:
+              email: user@example.com
+      responses:
+        "200":
+          description: Email health result.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                email: user@example.com
+                valid: true
+                deliverability_score: 85
+                breach_found: false
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/contact-enricher:
+    post:
+      summary: Contact Enricher
+      description: Enrich contacts with company, job title, and social profile data.
+      operationId: contactEnricher
+      tags:
+        - Identity & Fraud
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: john@example.com
+                name:
+                  type: string
+                  example: John Smith
+                phone:
+                  type: string
+                  example: "+12025551234"
+                company:
+                  type: string
+                  example: Acme Corp
+            example:
+              email: john@example.com
+              name: John Smith
+      responses:
+        "200":
+          description: Enriched contact data.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                email: john@example.com
+                title: Software Engineer
+                company: Acme Corp
+                linkedin: https://linkedin.com/in/johnsmith
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/spam-shield:
+    post:
+      summary: Spam Shield
+      description: Real-time spam scoring for emails, phone numbers, and text content.
+      operationId: spamShield
+      tags:
+        - Identity & Fraud
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: spam@example.com
+                phone:
+                  type: string
+                  example: "+12025551234"
+                content:
+                  type: string
+                  example: "Congratulations! You've won a prize!"
+                domain:
+                  type: string
+                  example: example.com
+            example:
+              email: spam@example.com
+              content: "Congratulations! You've won a prize!"
+      responses:
+        "200":
+          description: Spam score result.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                spam_score: 87
+                verdict: spam
+                signals: ["prize language", "suspicious domain"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/identity-risk-scorer:
+    post:
+      summary: Identity Risk Scorer
+      description: Composite fraud risk scoring from email, phone, and IP signals.
+      operationId: identityRiskScorer
+      tags:
+        - Identity & Fraud
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                phone:
+                  type: string
+                  example: "+12025551234"
+                ip:
+                  type: string
+                  example: 203.0.113.1
+                name:
+                  type: string
+                  example: John Smith
+                country:
+                  type: string
+                  example: US
+            example:
+              email: user@example.com
+              ip: 203.0.113.1
+      responses:
+        "200":
+          description: Identity risk score.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                risk_score: 23
+                risk_level: low
+                signals: []
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/supply-chain-monitor:
+    post:
+      summary: Supply Chain Monitor
+      description: Live disruption alerts and country risk scores for supply chain monitoring.
+      operationId: supplyChainMonitor
+      tags:
+        - Supply Chain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                industry:
+                  type: string
+                  example: electronics
+                countries:
+                  type: array
+                  items:
+                    type: string
+                  example: ["CN", "TW", "JP"]
+                product_category:
+                  type: string
+                  example: semiconductors
+                alert_severity:
+                  type: string
+                  example: high
+            example:
+              industry: electronics
+              countries: ["CN", "TW"]
+      responses:
+        "200":
+          description: Supply chain disruption data.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                alerts: []
+                country_risk_scores:
+                  CN: 62
+                  TW: 41
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/supplier-finder:
+    post:
+      summary: Supplier Finder
+      description: Discover vetted global suppliers by product category and country.
+      operationId: supplierFinder
+      tags:
+        - Supply Chain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_category:
+                  type: string
+                  example: electronics
+                countries:
+                  type: array
+                  items:
+                    type: string
+                  example: ["CN", "IN", "VN"]
+                certifications:
+                  type: array
+                  items:
+                    type: string
+                  example: ["ISO9001"]
+                moq_max:
+                  type: integer
+                  example: 1000
+                sample_required:
+                  type: boolean
+                  example: true
+            example:
+              product_category: electronics
+              countries: ["CN"]
+      responses:
+        "200":
+          description: Supplier list.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                suppliers: []
+                total_found: 0
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/tariff-lookup:
+    post:
+      summary: Tariff Lookup
+      description: Look up import/export tariff rates by HTS code or product description.
+      operationId: tariffLookup
+      tags:
+        - Supply Chain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hts_code:
+                  type: string
+                  example: "8471.30"
+                product_description:
+                  type: string
+                  example: laptop computers
+                origin_country:
+                  type: string
+                  example: CN
+                destination_country:
+                  type: string
+                  example: US
+                value_usd:
+                  type: number
+                  example: 5000
+            example:
+              hts_code: "8471.30"
+              origin_country: CN
+              destination_country: US
+              value_usd: 5000
+      responses:
+        "200":
+          description: Tariff rate result.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                hts_code: "8471.30"
+                tariff_rate_pct: 7.5
+                duty_amount_usd: 375
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/business-risk-scorer:
+    post:
+      summary: Business Risk Scorer
+      description: Score business credit and failure risk from domain and firmographics. Returns composite 0-100 risk score, creditworthiness, and recommended payment terms.
+      operationId: businessRiskScorer
+      tags:
+        - Business Intelligence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                company_name:
+                  type: string
+                  example: Acme Retail Co
+                domain:
+                  type: string
+                  example: acmeretail.com
+                industry:
+                  type: string
+                  example: retail
+                years_in_business:
+                  type: integer
+                  example: 2
+                employees:
+                  type: integer
+                  example: 12
+                revenue:
+                  type: number
+                  example: 450000
+            example:
+              company_name: Acme Retail Co
+              domain: acmeretail.com
+              industry: retail
+              years_in_business: 2
+              employees: 12
+      responses:
+        "200":
+          description: Business risk score.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                overall_risk_score: 58
+                risk_level: MEDIUM
+                creditworthiness: Fair
+                recommended_payment_terms: Net 15 with deposit
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/freight-estimator:
+    post:
+      summary: Freight Estimator
+      description: Get instant freight shipping quotes across air, ocean, ground, and express carriers for any origin/destination pair.
+      operationId: freightEstimator
+      tags:
+        - Supply Chain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - origin_country
+                - destination_country
+                - weight_kg
+              properties:
+                origin_country:
+                  type: string
+                  example: US
+                destination_country:
+                  type: string
+                  example: DE
+                weight_kg:
+                  type: number
+                  example: 50
+                dimensions_cm:
+                  type: string
+                  example: "60x40x30"
+                mode:
+                  type: string
+                  enum: [air, ocean, ground, express]
+                  example: air
+                value_usd:
+                  type: number
+                  example: 5000
+            example:
+              origin_country: US
+              destination_country: DE
+              weight_kg: 50
+              mode: air
+      responses:
+        "200":
+          description: Freight quotes sorted by cost.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                cheapest_option:
+                  carrier: DHL Express Worldwide
+                  mode: air
+                  total_usd: 497.41
+                  transit_days: 3
+                quotes: []
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+components:
+  securitySchemes:
+    RapidApiKey:
+      type: apiKey
+      in: header
+      name: X-RapidAPI-Key
+      description: RapidAPI gateway key. Direct production access also requires the configured RapidAPI proxy secret.
+  parameters:
+    RapidApiSubscription:
+      name: X-RapidAPI-Subscription
+      in: header
+      required: false
+      description: RapidAPI plan header. BASIC maps to free, PRO maps to pro, ULTRA maps to ultra, and MEGA maps to mega.
+      schema:
+        type: string
+        enum:
+          - BASIC
+          - PRO
+          - ULTRA
+          - MEGA
+      example: PRO
+    SiteTracePlan:
+      name: X-Plan
+      in: header
+      required: false
+      description: Direct/internal plan override. If omitted, the API defaults to free unless X-RapidAPI-Subscription is present.
+      schema:
+        type: string
+        enum:
+          - free
+          - pro
+          - ultra
+          - mega
+      example: pro
+  headers:
+    XRateLimitPlan:
+      description: Effective plan used by the API.
+      schema:
+        type: string
+        enum:
+          - free
+          - pro
+          - ultra
+          - mega
+    XRateLimitLimit:
+      description: Maximum requests allowed in the current one-minute window.
+      schema:
+        type: integer
+    XRateLimitRemaining:
+      description: Remaining requests in the current one-minute window.
+      schema:
+        type: integer
+    XRateLimitReset:
+      description: Unix timestamp when the current rate-limit window resets.
+      schema:
+        type: integer
+  requestBodies:
+    UrlRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UrlRequest"
+          example:
+            url: https://example.com
+  responses:
+    BadRequest:
+      description: Invalid request, missing URL, unsupported protocol, or private/local URL.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error: Private/local network URLs are not supported
+    RateLimited:
+      description: The request exceeded the active plan's per-minute rate limit.
+      headers:
+        Retry-After:
+          description: Seconds until the client should retry.
+          schema:
+            type: integer
+        X-RateLimit-Plan:
+          $ref: "#/components/headers/XRateLimitPlan"
+        X-RateLimit-Limit:
+          $ref: "#/components/headers/XRateLimitLimit"
+        X-RateLimit-Remaining:
+          $ref: "#/components/headers/XRateLimitRemaining"
+        X-RateLimit-Reset:
+          $ref: "#/components/headers/XRateLimitReset"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RateLimitResponse"
+          example:
+            success: false
+            error: Rate limit exceeded
+            plan: free
+            limit: 5
+            window_seconds: 60
+            retry_after_seconds: 60
+    UpstreamFailure:
+      description: The target website could not be fetched or analyzed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error: Failed to fetch or analyze URL
+    Unauthorized:
+      description: The request did not come through RapidAPI or an authorized internal client.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error: Unauthorized
+            message: Route access must come through RapidAPI or an authorized internal client.
+  schemas:
+    UrlRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Public HTTP or HTTPS website URL to analyze.
+          example: https://example.com
+        max_urls:
+          type: integer
+          description: Optional sitemap result limit for /api/sitemap-analyzer.
+          minimum: 1
+          maximum: 2000
+          example: 500
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+        - endpoints
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: sitetrace-api-suite
+        endpoints:
+          type: array
+          items:
+            type: string
+    BaseAnalysisResponse:
+      type: object
+      required:
+        - success
+        - url
+      properties:
+        success:
+          type: boolean
+        url:
+          type: string
+          format: uri
+        status_code:
+          type: integer
+        analyzed_at:
+          type: string
+          format: date-time
+        final_url:
+          type: string
+          format: uri
+    BaseDomainResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+        url:
+          type: string
+          format: uri
+        domain:
+          type: string
+        status_code:
+          type: integer
+        analyzed_at:
+          type: string
+          format: date-time
+    AuditInsights:
+      type: object
+      properties:
+        executive_summary:
+          type: string
+        page_profile:
+          type: object
+          additionalProperties: true
+        top_priorities:
+          type: array
+          items:
+            type: object
+            properties:
+              priority:
+                type: string
+              area:
+                type: string
+              issue:
+                type: string
+              action:
+                type: string
+        quick_wins:
+          type: array
+          items:
+            type: string
+        content_opportunities:
+          type: array
+          items:
+            type: object
+            properties:
+              priority:
+                type: string
+              title:
+                type: string
+              primary_keyword:
+                type: string
+              supporting_keywords:
+                type: array
+                items:
+                  type: string
+              intent:
+                type: string
+        optional_content_plan:
+          type: object
+          additionalProperties: true
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        detail:
+          type: string
+    RateLimitResponse:
+      type: object
+      required:
+        - success
+        - error
+        - plan
+        - limit
+        - window_seconds
+        - retry_after_seconds
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Rate limit exceeded
+        plan:
+          type: string
+          enum:
+            - free
+            - pro
+            - ultra
+            - mega
+        limit:
+          type: integer
+        window_seconds:
+          type: integer
+          example: 60
+        retry_after_seconds:
+          type: integer
+
