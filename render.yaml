@@ -16,3 +16,49 @@ services:
         sync: false
       - key: SITETRACE_INTERNAL_SECRET
         sync: false
+      - key: MARKETPLACE
+        value: api-market
+
+  - type: web
+    name: sitetrace-rapidapi
+    runtime: node
+    plan: starter
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NPM_CONFIG_PRODUCTION
+        value: "true"
+      - key: MARKETPLACE
+        value: rapidapi
+      - key: PUBLIC_BASE_URL
+        value: https://sitetrace-rapidapi.onrender.com
+      - key: RAPIDAPI_PROXY_SECRET
+        sync: false
+      - key: SITETRACE_INTERNAL_SECRET
+        sync: false
+
+  - type: web
+    name: sitetrace-zyla
+    runtime: node
+    plan: starter
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NPM_CONFIG_PRODUCTION
+        value: "true"
+      - key: MARKETPLACE
+        value: zyla
+      - key: PUBLIC_BASE_URL
+        value: https://sitetrace-zyla.onrender.com
+      - key: RAPIDAPI_PROXY_SECRET
+        sync: false
+      - key: SITETRACE_INTERNAL_SECRET
+        sync: false

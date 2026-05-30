@@ -1,0 +1,94 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "AI Content Detector API",
+    "version": "1.0.0",
+    "description": "AI Content Detector API. Analyzes text for statistical signals of AI generation: burstiness, vocabulary richness, passive voice density, AI phrase patterns, and paragraph uniformity. Returns a 0–100 probability score and label. No external API required — fully self-contained heuristics. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by ."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-rapidapi.onrender.com",
+      "description": "rapidapi production base URL"
+    }
+  ],
+  "paths": {
+    "/api/ai-content-detector": {
+      "post": {
+        "summary": "AI Content Detector",
+        "description": "Analyzes text for statistical signals of AI generation: burstiness, vocabulary richness, passive voice density, AI phrase patterns, and paragraph uniformity. Returns a 0–100 probability score and label. No external API required — fully self-contained heuristics.",
+        "operationId": "aiContentDetector",
+        "tags": [
+          "Web Intelligence"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "description": "The text to analyze (plain text, not HTML).",
+                    "example": "In today's rapidly evolving landscape, it is important to note that..."
+                  }
+                }
+              },
+              "example": {
+                "text": "In today's rapidly evolving landscape, it is important to note that..."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-RapidAPI-Key",
+            "in": "header",
+            "required": true,
+            "description": "RapidAPI application key. RapidAPI injects this for subscribed consumers.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-RapidAPI-Host",
+            "in": "header",
+            "required": true,
+            "description": "RapidAPI host for this API listing.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

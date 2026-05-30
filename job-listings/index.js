@@ -168,6 +168,46 @@ async function fetchAshbyJobs(slug) {
 
 // ── schema.org JobPosting ─────────────────────────────────────────────────────
 
+async function fetchStripeJobs() {
+  try {
+    const resp = await axios.get('https://stripe.com/jobs/search', {
+      timeout: 15000,
+      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html,application/xhtml+xml' }
+    });
+    const html = typeof resp.data === 'string' ? resp.data : '';
+    const $ = cheerio.load(html);
+    const jobs = [];
+
+    $('.JobsListings__tableBody .TableRow, tr.TableRow').each(function(_, el) {
+      const linkEl = $(el).find('a.JobsListings__link, a[href*="/jobs/listing/"]').first();
+      const title = linkEl.text().replace(/\s+/g, ' ').trim();
+      const href = linkEl.attr('href');
+      if (!title || !href) return;
+      const cells = $(el).find('.JobsListings__tableCell, td').map((__, cell) => (
+        $(cell).text().replace(/\s+/g, ' ').trim()
+      )).get().filter(Boolean);
+      const department = cells[1] || null;
+      const location = cells.slice(2).join(', ') || null;
+      jobs.push({
+        title,
+        company: 'Stripe',
+        department,
+        location,
+        employment_type: null,
+        remote: /remote/i.test(location || title),
+        description: null,
+        posted_date: null,
+        apply_url: href.startsWith('http') ? href : 'https://stripe.com' + href,
+        source: 'stripe_jobs_page',
+      });
+    });
+
+    return jobs.length ? { jobs, ats: 'stripe' } : null;
+  } catch (e) {
+    return null;
+  }
+}
+
 function fromSchema($) {
   var jobs = [];
   $('script[type="application/ld+json"]').each(function(_, el) {
@@ -299,7 +339,10 @@ app.post('/api/job-listings', async (req, res) => {
     const wkSlug  = extractWorkableSlug(urlStr);
     const ashSlug = extractAshbySlug(urlStr);
 
-    if (ghSlug) {
+    if (/stripe\.com\/jobs/i.test(urlStr)) {
+      const r = await fetchStripeJobs();
+      if (r && r.jobs.length > 0) { jobs = r.jobs; ats = r.ats; usedApi = true; }
+    } else if (ghSlug) {
       const r = await fetchGreenhouseJobs(ghSlug);
       if (r && r.jobs.length > 0) { jobs = r.jobs; ats = r.ats; usedApi = true; }
     } else if (lvSlug) {

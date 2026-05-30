@@ -1,0 +1,107 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Identity Risk Scorer API",
+    "version": "1.0.0",
+    "description": "Identity Risk Scorer API. Composite fraud risk scoring from email, phone, and IP signals. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by ."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-rapidapi.onrender.com",
+      "description": "rapidapi production base URL"
+    }
+  ],
+  "paths": {
+    "/api/identity-risk-scorer": {
+      "post": {
+        "summary": "Identity Risk Scorer",
+        "description": "Composite fraud risk scoring from email, phone, and IP signals.",
+        "operationId": "identityRiskScorer",
+        "tags": [
+          "Identity & Fraud"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "+12025551234"
+                  },
+                  "ip": {
+                    "type": "string",
+                    "example": "203.0.113.1"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "John Smith"
+                  },
+                  "country": {
+                    "type": "string",
+                    "example": "US"
+                  }
+                }
+              },
+              "example": {
+                "email": "user@example.com",
+                "ip": "203.0.113.1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-RapidAPI-Key",
+            "in": "header",
+            "required": true,
+            "description": "RapidAPI application key. RapidAPI injects this for subscribed consumers.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-RapidAPI-Host",
+            "in": "header",
+            "required": true,
+            "description": "RapidAPI host for this API listing.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

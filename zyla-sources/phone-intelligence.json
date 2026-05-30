@@ -1,0 +1,70 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Phone Intelligence API",
+    "version": "1.0.0",
+    "description": "Phone Intelligence API. Get line type, carrier, spam score, and fraud risk for any phone number. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by Zyla API Hub."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-zyla.onrender.com",
+      "description": "zyla production base URL"
+    }
+  ],
+  "paths": {
+    "/api/phone-intelligence": {
+      "post": {
+        "summary": "Phone Intelligence",
+        "description": "Get line type, carrier, spam score, and fraud risk for any phone number.",
+        "operationId": "phoneIntelligence",
+        "tags": [
+          "Identity & Fraud"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "phone": {
+                    "type": "string",
+                    "example": "+12025551234"
+                  }
+                }
+              },
+              "example": {
+                "phone": "+12025551234"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        }
+      }
+    }
+  }
+}

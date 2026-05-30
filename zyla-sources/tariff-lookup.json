@@ -1,0 +1,89 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Tariff Lookup API",
+    "version": "1.0.0",
+    "description": "Tariff Lookup API. Look up import/export tariff rates by HTS code or product description. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by Zyla API Hub."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-zyla.onrender.com",
+      "description": "zyla production base URL"
+    }
+  ],
+  "paths": {
+    "/api/tariff-lookup": {
+      "post": {
+        "summary": "Tariff Lookup",
+        "description": "Look up import/export tariff rates by HTS code or product description.",
+        "operationId": "tariffLookup",
+        "tags": [
+          "Supply Chain"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "hts_code": {
+                    "type": "string",
+                    "example": "8471.30"
+                  },
+                  "product_description": {
+                    "type": "string",
+                    "example": "laptop computers"
+                  },
+                  "origin_country": {
+                    "type": "string",
+                    "example": "CN"
+                  },
+                  "destination_country": {
+                    "type": "string",
+                    "example": "US"
+                  },
+                  "value_usd": {
+                    "type": "number",
+                    "example": 5000
+                  }
+                }
+              },
+              "example": {
+                "hts_code": "8471.30",
+                "origin_country": "CN",
+                "destination_country": "US",
+                "value_usd": 5000
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        }
+      }
+    }
+  }
+}

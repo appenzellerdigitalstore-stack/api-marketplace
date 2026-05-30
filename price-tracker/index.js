@@ -31,13 +31,32 @@ function extractCurrency(str) {
 
 function fromSchema($, html) {
   let product = null;
+  function flattenJsonLd(value) {
+    if (!value) return [];
+    const queue = Array.isArray(value) ? value.slice() : [value];
+    const items = [];
+    while (queue.length) {
+      const item = queue.shift();
+      if (!item || typeof item !== 'object') continue;
+      items.push(item);
+      if (Array.isArray(item['@graph'])) queue.push(...item['@graph']);
+      if (Array.isArray(item.itemListElement)) {
+        item.itemListElement.forEach((entry) => {
+          if (entry && typeof entry === 'object') queue.push(entry.item || entry);
+        });
+      }
+    }
+    return items;
+  }
+
   $('script[type="application/ld+json"]').each((_, el) => {
     if (product) return;
     try {
       const json = JSON.parse($(el).html());
-      const items = Array.isArray(json) ? json : [json];
+      const items = flattenJsonLd(json);
       for (const item of items) {
-        if (item['@type'] === 'Product' || item['@type'] === 'ItemPage') {
+        const type = Array.isArray(item['@type']) ? item['@type'] : [item['@type']];
+        if (type.includes('Product') || type.includes('ItemPage')) {
           product = item;
           break;
         }

@@ -1,0 +1,31 @@
+{
+  "marketplace": "rapidapi",
+  "baseUrl": "https://sitetrace-rapidapi.onrender.com",
+  "descriptionSuffix": "Pricing, quotas, authentication, and subscriptions are handled by RapidAPI.",
+  "headers": [
+    {
+      "name": "X-RapidAPI-Key",
+      "description": "RapidAPI application key. RapidAPI injects this for subscribed consumers.",
+      "required": true
+    },
+    {
+      "name": "X-RapidAPI-Host",
+      "description": "RapidAPI host for this API listing.",
+      "required": true
+    }
+  ],
+  "examples": {
+    "review-scraper": {
+      "url": "https://sitetrace-rapidapi.onrender.com/fixtures/reviews"
+    },
+    "price-tracker": {
+      "url": "https://sitetrace-rapidapi.onrender.com/fixtures/product"
+    },
+    "job-listings": {
+      "url": "https://stripe.com/jobs",
+      "filter_location": "",
+      "filter_department": "",
+      "filter_remote": false
+    }
+  }
+}

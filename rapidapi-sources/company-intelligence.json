@@ -1,0 +1,96 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Company Intelligence API",
+    "version": "1.0.0",
+    "description": "Company Intelligence API. Scrapes a company homepage for description, social links, contact info, tech stack (30+ fingerprints), founding year, employee count signals, and key pages (careers, blog, pricing). Returns structured company profile. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by ."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-rapidapi.onrender.com",
+      "description": "rapidapi production base URL"
+    }
+  ],
+  "paths": {
+    "/api/company-intelligence": {
+      "post": {
+        "summary": "Company Intelligence",
+        "description": "Scrapes a company homepage for description, social links, contact info, tech stack (30+ fingerprints), founding year, employee count signals, and key pages (careers, blog, pricing). Returns structured company profile.",
+        "operationId": "companyIntelligence",
+        "tags": [
+          "Lead Generation",
+          "Web Intelligence"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "example": "stripe.com"
+                  },
+                  "url": {
+                    "type": "string",
+                    "example": "https://stripe.com"
+                  }
+                }
+              },
+              "example": {
+                "domain": "stripe.com",
+                "url": "https://stripe.com"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-RapidAPI-Key",
+            "in": "header",
+            "required": true,
+            "description": "RapidAPI application key. RapidAPI injects this for subscribed consumers.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-RapidAPI-Host",
+            "in": "header",
+            "required": true,
+            "description": "RapidAPI host for this API listing.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Nutrition Analyzer API",
+    "version": "1.0.0",
+    "description": "Nutrition Analyzer API. Get instant macro & micro nutrient breakdown for any food item or recipe. Returns calories, protein, carbs, fat, fiber, sugar, vitamins, and minerals per serving. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by ."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-rapidapi.onrender.com",
+      "description": "rapidapi production base URL"
+    }
+  ],
+  "paths": {
+    "/api/nutrition-analyzer": {
+      "post": {
+        "summary": "Nutrition Analyzer",
+        "description": "Get instant macro & micro nutrient breakdown for any food item or recipe. Returns calories, protein, carbs, fat, fiber, sugar, vitamins, and minerals per serving.",
+        "operationId": "nutritionAnalyzer",
+        "tags": [
+          "Food & Health"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "food": {
+                    "type": "string",
+                    "example": "apple"
+                  },
+                  "ingredients": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "100g chicken breast",
+                      "50g rice"
+                    ]
+                  },
+                  "grams": {
+                    "type": "number",
+                    "example": 100
+                  },
+                  "serving_size": {
+                    "type": "string",
+                    "example": "1 cup"
+                  }
+                }
+              },
+              "example": {
+                "food": "apple",
+                "grams": 100
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-RapidAPI-Key",
+            "in": "header",
+            "required": true,
+            "description": "RapidAPI application key. RapidAPI injects this for subscribed consumers.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-RapidAPI-Host",
+            "in": "header",
+            "required": true,
+            "description": "RapidAPI host for this API listing.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

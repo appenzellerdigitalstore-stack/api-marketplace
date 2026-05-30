@@ -1,0 +1,23 @@
+{
+  "marketplace": "zyla",
+  "baseUrl": "https://sitetrace-zyla.onrender.com",
+  "descriptionSuffix": "Pricing, quotas, authentication, and subscriptions are handled by Zyla API Hub.",
+  "headers": [],
+  "examples": {
+    "review-scraper": {
+      "url": "https://sitetrace-zyla.onrender.com/fixtures/reviews"
+    },
+    "price-tracker": {
+      "url": "https://sitetrace-zyla.onrender.com/fixtures/product"
+    },
+    "job-listings": {
+      "url": "https://stripe.com/jobs",
+      "filter_location": "",
+      "filter_department": "",
+      "filter_remote": false
+    },
+    "seo-snapshot": {
+      "url": "https://example.com"
+    }
+  }
+}

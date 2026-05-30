@@ -1,0 +1,113 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Supplement Checker API",
+    "version": "1.0.0",
+    "description": "Supplement Checker API. Analyze supplement stacks for interactions, timing recommendations, and overdose risk. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by ."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-rapidapi.onrender.com",
+      "description": "rapidapi production base URL"
+    }
+  ],
+  "paths": {
+    "/api/supplement-checker": {
+      "post": {
+        "summary": "Supplement Checker",
+        "description": "Analyze supplement stacks for interactions, timing recommendations, and overdose risk.",
+        "operationId": "supplementChecker",
+        "tags": [
+          "Food & Health"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "supplements": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "vitamin C 1000mg",
+                      "zinc 50mg",
+                      "magnesium 400mg"
+                    ]
+                  },
+                  "goal": {
+                    "type": "string",
+                    "example": "immune support"
+                  },
+                  "age": {
+                    "type": "integer",
+                    "example": 30
+                  },
+                  "weight_kg": {
+                    "type": "number",
+                    "example": 75
+                  }
+                }
+              },
+              "example": {
+                "supplements": [
+                  "vitamin C 1000mg",
+                  "zinc 50mg"
+                ],
+                "goal": "immune support"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-RapidAPI-Key",
+            "in": "header",
+            "required": true,
+            "description": "RapidAPI application key. RapidAPI injects this for subscribed consumers.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-RapidAPI-Host",
+            "in": "header",
+            "required": true,
+            "description": "RapidAPI host for this API listing.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

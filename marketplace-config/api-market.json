@@ -1,0 +1,7 @@
+{
+  "marketplace": "api-market",
+  "baseUrl": "https://api-marketplace-b73f.onrender.com",
+  "descriptionSuffix": "Pricing, quotas, and authentication are handled by api.market plans.",
+  "headers": [],
+  "examples": {}
+}

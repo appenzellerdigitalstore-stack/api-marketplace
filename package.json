@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "check": "node --check server.js && node -e \"const fs=require('fs'); for (const d of fs.readdirSync('.')) { const p=d+'/index.js'; if (fs.existsSync(p)) require('child_process').execFileSync(process.execPath, ['--check', p], {stdio:'inherit'}); }\""
+    "check": "node --check server.js && node -e \"const fs=require('fs'); for (const d of fs.readdirSync('.')) { const p=d+'/index.js'; if (fs.existsSync(p)) require('child_process').execFileSync(process.execPath, ['--check', p], {stdio:'inherit'}); }\"",
+    "generate:rapidapi": "node scripts/generate-marketplace-sources.js rapidapi",
+    "generate:zyla": "node scripts/generate-marketplace-sources.js zyla",
+    "generate:marketplaces": "npm run generate:rapidapi && npm run generate:zyla"
   },
   "dependencies": {
     "axios": "^1.6.0",

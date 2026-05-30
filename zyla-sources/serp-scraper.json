@@ -1,0 +1,100 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "SERP Scraper API",
+    "version": "1.0.0",
+    "description": "SERP Scraper API. Fetches Google search results for a query and returns organic results with title, URL, and snippet. Pro+ also returns featured snippet and People Also Ask. Ultra/Mega adds related searches and knowledge panel. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by Zyla API Hub."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-zyla.onrender.com",
+      "description": "zyla production base URL"
+    }
+  ],
+  "paths": {
+    "/api/serp-scraper": {
+      "post": {
+        "summary": "Google SERP Scraper",
+        "description": "Fetches Google search results for a query and returns organic results with title, URL, and snippet. Pro+ also returns featured snippet and People Also Ask. Ultra/Mega adds related searches and knowledge panel.",
+        "operationId": "serpScraper",
+        "tags": [
+          "SEO",
+          "Web Intelligence"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "query"
+                ],
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "example": "best project management tools 2025"
+                  },
+                  "num": {
+                    "type": "integer",
+                    "description": "Number of results (max depends on plan)",
+                    "example": 10
+                  },
+                  "lang": {
+                    "type": "string",
+                    "example": "en"
+                  },
+                  "country": {
+                    "type": "string",
+                    "example": "us"
+                  },
+                  "search_type": {
+                    "type": "string",
+                    "enum": [
+                      "web",
+                      "news",
+                      "images"
+                    ],
+                    "example": "web"
+                  }
+                }
+              },
+              "example": {
+                "query": "best project management tools 2025",
+                "num": 10,
+                "lang": "en",
+                "country": "us",
+                "search_type": "web"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        }
+      }
+    }
+  }
+}

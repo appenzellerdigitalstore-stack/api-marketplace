@@ -1,0 +1,98 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Food Allergen Checker API",
+    "version": "1.0.0",
+    "description": "Food Allergen Checker API. Scan ingredients for 16 major allergens including gluten, dairy, nuts, soy, shellfish, and more. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by Zyla API Hub."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-zyla.onrender.com",
+      "description": "zyla production base URL"
+    }
+  ],
+  "paths": {
+    "/api/food-allergen-checker": {
+      "post": {
+        "summary": "Food Allergen Checker",
+        "description": "Scan ingredients for 16 major allergens including gluten, dairy, nuts, soy, shellfish, and more.",
+        "operationId": "foodAllergenChecker",
+        "tags": [
+          "Food & Health"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ingredients": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "wheat flour",
+                      "milk",
+                      "eggs",
+                      "butter"
+                    ]
+                  },
+                  "recipe_name": {
+                    "type": "string",
+                    "example": "chocolate cake"
+                  },
+                  "check_allergens": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "gluten",
+                      "dairy",
+                      "eggs"
+                    ]
+                  }
+                }
+              },
+              "example": {
+                "ingredients": [
+                  "wheat flour",
+                  "milk",
+                  "eggs",
+                  "butter"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        }
+      }
+    }
+  }
+}

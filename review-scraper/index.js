@@ -137,10 +137,28 @@ function scrapeGenericSchema($, urlStr) {
   const reviews = [];
   let aggregateRating = null;
 
+  function flattenJsonLd(value) {
+    if (!value) return [];
+    const queue = Array.isArray(value) ? value.slice() : [value];
+    const items = [];
+    while (queue.length) {
+      const item = queue.shift();
+      if (!item || typeof item !== 'object') continue;
+      items.push(item);
+      if (Array.isArray(item['@graph'])) queue.push(...item['@graph']);
+      if (Array.isArray(item.itemListElement)) {
+        item.itemListElement.forEach((entry) => {
+          if (entry && typeof entry === 'object') queue.push(entry.item || entry);
+        });
+      }
+    }
+    return items;
+  }
+
   $('script[type="application/ld+json"]').each((_, el) => {
     try {
       const json = JSON.parse($(el).html());
-      const items = Array.isArray(json) ? json : [json];
+      const items = flattenJsonLd(json);
       items.forEach(data => {
         if (data.aggregateRating && !aggregateRating) {
           aggregateRating = {

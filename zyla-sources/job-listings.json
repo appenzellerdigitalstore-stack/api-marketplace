@@ -1,0 +1,88 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Job Listings Aggregator API",
+    "version": "1.0.0",
+    "description": "Job Listings Aggregator API. Scrapes job listings from company career pages or ATS platforms including Greenhouse, Lever, Workday, BambooHR, and Ashby. Returns structured job data with department, location, type, and apply URL. Supports filtering by location, department, and remote status. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by Zyla API Hub."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-zyla.onrender.com",
+      "description": "zyla production base URL"
+    }
+  ],
+  "paths": {
+    "/api/job-listings": {
+      "post": {
+        "summary": "Job Listings Aggregator",
+        "description": "Scrapes job listings from company career pages or ATS platforms including Greenhouse, Lever, Workday, BambooHR, and Ashby. Returns structured job data with department, location, type, and apply URL. Supports filtering by location, department, and remote status.",
+        "operationId": "jobListings",
+        "tags": [
+          "Lead Generation"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "example": "https://stripe.com/jobs"
+                  },
+                  "filter_location": {
+                    "type": "string",
+                    "example": ""
+                  },
+                  "filter_department": {
+                    "type": "string",
+                    "example": ""
+                  },
+                  "filter_remote": {
+                    "type": "boolean",
+                    "example": false
+                  }
+                }
+              },
+              "example": {
+                "url": "https://stripe.com/jobs",
+                "filter_location": "",
+                "filter_department": "",
+                "filter_remote": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        }
+      }
+    }
+  }
+}

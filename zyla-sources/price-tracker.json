@@ -1,0 +1,82 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "E-commerce Price Tracker API",
+    "version": "1.0.0",
+    "description": "E-commerce Price Tracker API. Extracts product price, title, availability, rating, images, and seller info from any e-commerce product page. Uses schema.org, Open Graph, and DOM heuristics. Supports Amazon, Shopify, WooCommerce, and generic stores. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by Zyla API Hub."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-zyla.onrender.com",
+      "description": "zyla production base URL"
+    }
+  ],
+  "paths": {
+    "/api/price-tracker": {
+      "post": {
+        "summary": "E-commerce Price Tracker",
+        "description": "Extracts product price, title, availability, rating, images, and seller info from any e-commerce product page. Uses schema.org, Open Graph, and DOM heuristics. Supports Amazon, Shopify, WooCommerce, and generic stores.",
+        "operationId": "priceTracker",
+        "tags": [
+          "Web Intelligence"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Public HTTP or HTTPS website URL to analyze.",
+                    "example": "https://sitetrace-zyla.onrender.com/fixtures/product"
+                  },
+                  "max_urls": {
+                    "type": "integer",
+                    "description": "Optional sitemap result limit for /api/sitemap-analyzer.",
+                    "minimum": 1,
+                    "maximum": 2000,
+                    "example": 500
+                  }
+                }
+              },
+              "example": {
+                "url": "https://sitetrace-zyla.onrender.com/fixtures/product"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        }
+      }
+    }
+  }
+}

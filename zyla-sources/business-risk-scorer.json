@@ -1,0 +1,94 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Business Risk Scorer API",
+    "version": "1.0.0",
+    "description": "Business Risk Scorer API. Score business credit and failure risk from domain and firmographics. Returns composite 0-100 risk score, creditworthiness, and recommended payment terms. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by Zyla API Hub."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-zyla.onrender.com",
+      "description": "zyla production base URL"
+    }
+  ],
+  "paths": {
+    "/api/business-risk-scorer": {
+      "post": {
+        "summary": "Business Risk Scorer",
+        "description": "Score business credit and failure risk from domain and firmographics. Returns composite 0-100 risk score, creditworthiness, and recommended payment terms.",
+        "operationId": "businessRiskScorer",
+        "tags": [
+          "Business Intelligence"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "company_name": {
+                    "type": "string",
+                    "example": "Acme Retail Co"
+                  },
+                  "domain": {
+                    "type": "string",
+                    "example": "acmeretail.com"
+                  },
+                  "industry": {
+                    "type": "string",
+                    "example": "retail"
+                  },
+                  "years_in_business": {
+                    "type": "integer",
+                    "example": 2
+                  },
+                  "employees": {
+                    "type": "integer",
+                    "example": 12
+                  },
+                  "revenue": {
+                    "type": "number",
+                    "example": 450000
+                  }
+                }
+              },
+              "example": {
+                "company_name": "Acme Retail Co",
+                "domain": "acmeretail.com",
+                "industry": "retail",
+                "years_in_business": 2,
+                "employees": 12
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        }
+      }
+    }
+  }
+}

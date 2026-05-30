@@ -82,6 +82,130 @@ app.get('/', function(_req, res) {
   });
 });
 
+app.get('/fixtures/reviews', function(_req, res) {
+  res.type('html').send(`<!doctype html>
+<html lang="en">
+<head>
+  <title>North Peak Reviews</title>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "North Peak Trail Runner",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.7",
+      "reviewCount": "128",
+      "bestRating": "5"
+    },
+    "review": [
+      {
+        "@type": "Review",
+        "author": {"@type": "Person", "name": "Maya R."},
+        "datePublished": "2026-04-14",
+        "name": "Reliable grip",
+        "reviewBody": "The shoes kept traction on wet trails and felt comfortable for long runs.",
+        "reviewRating": {"@type": "Rating", "ratingValue": "5", "bestRating": "5"}
+      },
+      {
+        "@type": "Review",
+        "author": {"@type": "Person", "name": "Daniel K."},
+        "datePublished": "2026-03-22",
+        "name": "Good daily trainer",
+        "reviewBody": "Lightweight, stable, and easy to break in. The toe box runs slightly narrow.",
+        "reviewRating": {"@type": "Rating", "ratingValue": "4", "bestRating": "5"}
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <h1>North Peak Trail Runner Reviews</h1>
+  <article class="review-card"><h2>Reliable grip</h2><p>The shoes kept traction on wet trails and felt comfortable for long runs.</p></article>
+  <article class="review-card"><h2>Good daily trainer</h2><p>Lightweight, stable, and easy to break in.</p></article>
+</body>
+</html>`);
+});
+
+app.get('/fixtures/product', function(_req, res) {
+  res.type('html').send(`<!doctype html>
+<html lang="en">
+<head>
+  <title>North Peak Trail Runner</title>
+  <meta property="og:title" content="North Peak Trail Runner">
+  <meta property="product:price:amount" content="129.00">
+  <meta property="product:price:currency" content="USD">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "North Peak Trail Runner",
+    "description": "Lightweight trail running shoe with a grippy outsole.",
+    "brand": {"@type": "Brand", "name": "North Peak"},
+    "sku": "TRAIL-100-BLK",
+    "image": ["https://example.com/images/north-peak-trail-runner.jpg"],
+    "offers": {
+      "@type": "Offer",
+      "price": "129.00",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock",
+      "itemCondition": "https://schema.org/NewCondition",
+      "seller": {"@type": "Organization", "name": "North Peak Store"}
+    },
+    "aggregateRating": {"@type": "AggregateRating", "ratingValue": "4.7", "reviewCount": "128"}
+  }
+  </script>
+</head>
+<body>
+  <h1 class="product-title">North Peak Trail Runner</h1>
+  <p class="product__price">$129.00</p>
+  <p class="availability">In stock</p>
+</body>
+</html>`);
+});
+
+app.get('/fixtures/jobs', function(_req, res) {
+  res.type('html').send(`<!doctype html>
+<html lang="en">
+<head>
+  <title>Acme Careers</title>
+  <script type="application/ld+json">
+  [
+    {
+      "@context": "https://schema.org",
+      "@type": "JobPosting",
+      "title": "Backend API Engineer",
+      "datePosted": "2026-05-20",
+      "employmentType": "FULL_TIME",
+      "hiringOrganization": {"@type": "Organization", "name": "Acme Data"},
+      "jobLocation": {"@type": "Place", "address": {"@type": "PostalAddress", "addressLocality": "Austin", "addressRegion": "TX", "addressCountry": "US"}},
+      "description": "Build reliable APIs for data products.",
+      "url": "https://example.com/jobs/backend-api-engineer"
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "JobPosting",
+      "title": "Remote Data Analyst",
+      "datePosted": "2026-05-18",
+      "employmentType": "CONTRACTOR",
+      "jobLocationType": "TELECOMMUTE",
+      "hiringOrganization": {"@type": "Organization", "name": "Acme Data"},
+      "description": "Analyze customer datasets and prepare weekly reporting.",
+      "url": "https://example.com/jobs/remote-data-analyst"
+    }
+  ]
+  </script>
+</head>
+<body>
+  <h1>Acme Data Careers</h1>
+  <ul>
+    <li class="job-card"><a href="/jobs/backend-api-engineer">Backend API Engineer</a><span class="location">Austin, TX</span></li>
+    <li class="job-card"><a href="/jobs/remote-data-analyst">Remote Data Analyst</a><span class="location">Remote</span></li>
+  </ul>
+</body>
+</html>`);
+});
+
 // Mount all 35 API sub-apps
 app.use(require('./seo-snapshot/index'));
 app.use(require('./robots-analyzer/index'));

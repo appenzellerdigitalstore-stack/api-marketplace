@@ -1,0 +1,102 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "SEO Snapshot API",
+    "version": "1.0.0",
+    "description": "SEO Snapshot API. Analyze a public URL and return on-page SEO metadata, headings, image alt coverage, links, social tag signals, and plan-dependent SEO analysis. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by ."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-rapidapi.onrender.com",
+      "description": "rapidapi production base URL"
+    }
+  ],
+  "paths": {
+    "/api/seo-snapshot": {
+      "post": {
+        "summary": "SEO Snapshot",
+        "description": "Analyze a public URL and return on-page SEO metadata, headings, image alt coverage, links, social tag signals, and plan-dependent SEO analysis.",
+        "operationId": "seoSnapshot",
+        "tags": [
+          "SEO"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Public HTTP or HTTPS website URL to analyze.",
+                    "example": "https://example.com"
+                  },
+                  "max_urls": {
+                    "type": "integer",
+                    "description": "Optional sitemap result limit for /api/sitemap-analyzer.",
+                    "minimum": 1,
+                    "maximum": 2000,
+                    "example": 500
+                  }
+                }
+              },
+              "example": {
+                "url": "https://example.com"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-RapidAPI-Key",
+            "in": "header",
+            "required": true,
+            "description": "RapidAPI application key. RapidAPI injects this for subscribed consumers.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-RapidAPI-Host",
+            "in": "header",
+            "required": true,
+            "description": "RapidAPI host for this API listing.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

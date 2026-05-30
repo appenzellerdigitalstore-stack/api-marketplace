@@ -1,0 +1,75 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Email Finder API",
+    "version": "1.0.0",
+    "description": "Email Finder API. Given a domain, crawls contact/about/team pages and generates common email patterns (info@, contact@, etc.), then verifies MX records for deliverability. Returns confidence-scored email addresses. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by Zyla API Hub."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-zyla.onrender.com",
+      "description": "zyla production base URL"
+    }
+  ],
+  "paths": {
+    "/api/email-finder": {
+      "post": {
+        "summary": "Email Finder",
+        "description": "Given a domain, crawls contact/about/team pages and generates common email patterns (info@, contact@, etc.), then verifies MX records for deliverability. Returns confidence-scored email addresses.",
+        "operationId": "emailFinder",
+        "tags": [
+          "Lead Generation"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "example": "example.com"
+                  },
+                  "url": {
+                    "type": "string",
+                    "example": "https://example.com"
+                  }
+                }
+              },
+              "example": {
+                "domain": "example.com",
+                "url": "https://example.com"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        }
+      }
+    }
+  }
+}

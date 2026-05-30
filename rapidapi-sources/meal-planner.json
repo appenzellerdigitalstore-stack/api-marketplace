@@ -1,0 +1,109 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Meal Planner API",
+    "version": "1.0.0",
+    "description": "Meal Planner API. Generate personalized weekly meal plans instantly based on dietary goals, restrictions, and calorie targets. Send a JSON POST request and receive a structured JSON response. Pricing, quotas, authentication, and subscriptions are handled by ."
+  },
+  "servers": [
+    {
+      "url": "https://sitetrace-rapidapi.onrender.com",
+      "description": "rapidapi production base URL"
+    }
+  ],
+  "paths": {
+    "/api/meal-planner": {
+      "post": {
+        "summary": "Meal Planner",
+        "description": "Generate personalized weekly meal plans instantly based on dietary goals, restrictions, and calorie targets.",
+        "operationId": "mealPlanner",
+        "tags": [
+          "Food & Health"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "goal": {
+                    "type": "string",
+                    "example": "weight_loss"
+                  },
+                  "calories_per_day": {
+                    "type": "integer",
+                    "example": 1800
+                  },
+                  "dietary_restrictions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "vegetarian"
+                    ]
+                  },
+                  "days": {
+                    "type": "integer",
+                    "example": 7
+                  }
+                }
+              },
+              "example": {
+                "goal": "weight_loss",
+                "calories_per_day": 1800,
+                "days": 7
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response from the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing request fields."
+          },
+          "429": {
+            "description": "Rate limit exceeded for the current plan."
+          },
+          "500": {
+            "description": "Unexpected server error."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-RapidAPI-Key",
+            "in": "header",
+            "required": true,
+            "description": "RapidAPI application key. RapidAPI injects this for subscribed consumers.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-RapidAPI-Host",
+            "in": "header",
+            "required": true,
+            "description": "RapidAPI host for this API listing.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
