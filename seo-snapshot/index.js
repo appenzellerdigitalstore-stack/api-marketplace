@@ -9,8 +9,8 @@ const { normalizeUrl, fetchPage, getSslInfo, errorResponse } = require('../share
 const { getPlan, filterByPlan } = require('../shared/planFilter');
 
 const app = express();
-app.use(express.json({ strict: false, type: () => true }));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ strict: false }));
 
 function readPayload(req) {
   if (req.body && typeof req.body.request_body === 'string') {
